@@ -16,4 +16,4 @@ class LinkedInProfile:
     def get_person_id(self):
         profile = self.get_profile()
 
-        return profile["sub"]
+        return profile.get("sub")
