@@ -26,6 +26,19 @@ class LinkedInClient:
             "X-Restli-Protocol-Version": "2.0.0"
         }
 
+    def _request(
+        self,
+        method,
+        endpoint,
+        headers=None,
+        **kwargs
+    ):
+
+    request_headers = self._headers()
+
+    if headers:
+        request_headers.update(headers)
+
     def get(self, endpoint, params=None):
         response = requests.get(
             f"{self.BASE_URL}{endpoint}",
