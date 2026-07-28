@@ -1,9 +1,11 @@
-from app.providers.gemini import GeminiChat
+from app.agents.collector import CollectorAgent
 
-chat = GeminiChat()
+collector = CollectorAgent()
 
-print(
-    chat.generate(
-        "Explique em uma frase o que é Business Intelligence."
-    )
+response = collector.collect(
+    """
+    Business Intelligence é...
+    """
 )
+
+print(response)
