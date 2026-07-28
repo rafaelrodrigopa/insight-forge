@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: insight-forge
+Version: 0.1.0
+Summary: AI agents platform for content intelligence
+Requires-Python: >=3.12
+License-File: LICENSE
+Dynamic: license-file
