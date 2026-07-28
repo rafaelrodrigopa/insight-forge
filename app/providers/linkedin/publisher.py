@@ -1,6 +1,7 @@
 from .client import LinkedInClient
 from .profile import LinkedInProfile
 
+
 class LinkedInPublisher:
 
     def __init__(self):
@@ -9,9 +10,8 @@ class LinkedInPublisher:
 
 
     def _get_person_urn(self):
-        person_id = self.profile.get_person_id()
 
-        return f"urn:li:person:{person_id}"
+        return self.profile.get_person_urn()
 
 
     def publish_text(self, text):
@@ -19,10 +19,8 @@ class LinkedInPublisher:
         Publica um texto no LinkedIn.
         """
 
-        person_urn = self._get_person_urn()
-
         payload = {
-            "author": person_urn,
+            "author": self._get_person_urn(),
             "commentary": text,
             "visibility": "PUBLIC",
             "distribution": {
@@ -42,33 +40,14 @@ class LinkedInPublisher:
         text,
         url,
         title=None,
-        description=None,
-        person_urn=None
+        description=None
     ):
         """
         Publica um artigo/link no LinkedIn.
         """
 
-        media = {
-            "status": "READY",
-            "originalUrl": url
-        }
-
-
-        if title:
-            media["title"] = {
-                "text": title
-            }
-
-
-        if description:
-            media["description"] = {
-                "text": description
-            }
-
-
         payload = {
-            "author": person_urn,
+            "author": self._get_person_urn(),
             "commentary": text,
             "visibility": "PUBLIC",
             "distribution": {
@@ -83,9 +62,14 @@ class LinkedInPublisher:
         }
 
 
-        response = self.client.post(
+        if title or description:
+
+            payload["content"]["article"]["title"] = title
+
+            payload["content"]["article"]["description"] = description
+
+
+        return self.client.post(
             "/rest/posts",
             payload
         )
-
-        return response

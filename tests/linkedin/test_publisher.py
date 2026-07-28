@@ -10,4 +10,8 @@ response = publisher.publish_text(
 
 
 print(response.status_code)
-print(response.json())
+if response.text:
+    print(response.json())
+else:
+    print("Publicação criada com sucesso!")
+    print("Post ID:", response.headers.get("X-RestLi-Id"))

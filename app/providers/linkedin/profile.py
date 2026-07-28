@@ -17,3 +17,6 @@ class LinkedInProfile:
         profile = self.get_profile()
 
         return profile.get("sub")
+
+    def get_person_urn(self):
+        return f"urn:li:person:{self.get_person_id()}"
