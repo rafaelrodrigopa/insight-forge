@@ -1,9 +1,6 @@
-import os
 import requests
-from dotenv import load_dotenv
 
-
-load_dotenv()
+from app.config.settings import settings
 
 
 class LinkedInClient:
@@ -11,7 +8,8 @@ class LinkedInClient:
     BASE_URL = "https://api.linkedin.com"
 
     def __init__(self):
-        self.access_token = os.getenv("LINKEDIN_ACCESS_TOKEN")
+
+        self.access_token = settings.LINKEDIN_ACCESS_TOKEN
 
         if not self.access_token:
             raise ValueError(
@@ -19,6 +17,7 @@ class LinkedInClient:
             )
 
     def _headers(self):
+
         return {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
@@ -26,35 +25,32 @@ class LinkedInClient:
             "X-Restli-Protocol-Version": "2.0.0"
         }
 
-    def _request(
-        self,
-        method,
-        endpoint,
-        headers=None,
-        **kwargs
-    ):
+    def _request(self, method, endpoint, **kwargs):
 
-    request_headers = self._headers()
+        response = requests.request(
+            method=method,
+            url=f"{self.BASE_URL}{endpoint}",
+            headers=self._headers(),
+            timeout=30,
+            **kwargs
+        )
 
-    if headers:
-        request_headers.update(headers)
+        response.raise_for_status()
+
+        return response
 
     def get(self, endpoint, params=None):
-        response = requests.get(
-            f"{self.BASE_URL}{endpoint}",
-            headers=self._headers(),
-            params=params
-        )
 
-        response.raise_for_status()
-        return response.json()
+        return self._request(
+            "GET",
+            endpoint,
+            params=params
+        ).json()
 
     def post(self, endpoint, payload):
-        response = requests.post(
-            f"{self.BASE_URL}{endpoint}",
-            headers=self._headers(),
+
+        return self._request(
+            "POST",
+            endpoint,
             json=payload
         )
-
-        response.raise_for_status()
-        return response
