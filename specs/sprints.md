@@ -114,6 +114,8 @@ Document
 - Conversão para objeto `Document`.
 - Testes unitários.
 
+**Status:** ✅ Concluído
+
 ---
 
 # Sprint 5 — Integração com LLM
@@ -140,6 +142,8 @@ Resumo
 - Enviar para um provedor de IA.
 - Receber um resumo estruturado.
 - Validar arquitetura dos Providers.
+
+**Status:** ✅ Concluído
 
 ---
 
