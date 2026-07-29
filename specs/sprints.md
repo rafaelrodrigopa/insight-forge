@@ -179,6 +179,8 @@ posts/
 2026-07-27-python-3-15.md
 ```
 
+**Status:** ✅ Concluído
+
 Ao final desta sprint, o projeto possuirá um **MVP funcional**, capaz de coletar uma notícia, processá-la com IA e gerar um rascunho de conteúdo.
 
 ---
