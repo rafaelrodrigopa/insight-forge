@@ -203,6 +203,8 @@ Implementar inteligência na seleção dos conteúdos.
 - Sentence Transformers
 - Cosine Similarity
 
+**Status:** ✅ Concluído
+
 ---
 
 # Sprint 8 — Agentes de IA
