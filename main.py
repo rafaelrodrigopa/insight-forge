@@ -6,7 +6,10 @@ from typing import Optional
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+from app.agents.classifier import ClassifierAgent
 from app.agents.collector import CollectorAgent
+from app.agents.critic import CriticAgent
+from app.agents.prioritizer import PrioritizerAgent
 from app.agents.summarizer import SummarizerAgent
 from app.agents.writer import WriterAgent
 from app.preprocess import ContentDeduplicator
@@ -17,7 +20,7 @@ def run_pipeline(source_url: Optional[str] = None, process_all: bool = False):
     url = source_url or "https://realpython.com/atom.xml"
 
     print("==================================================")
-    print("Insight Forge -- Pipeline de Automação de Conteúdo")
+    print("Insight Forge -- Pipeline Multiagente de Conteúdo")
     print("==================================================")
     print(f"Fonte configurada: {url}\n")
 
@@ -35,14 +38,14 @@ def run_pipeline(source_url: Optional[str] = None, process_all: bool = False):
         print("Nenhum item encontrado na fonte informada.")
         return
 
-    # 2. Deduplicação Semântica
-    print("\n2. [Preprocess] Deduplicando notícias...")
+    # 2. Preprocessamento & Deduplicação
+    print("\n2. [Preprocess] Deduplicando conteúdos...")
     deduplicator = ContentDeduplicator(similarity_threshold=0.60)
     unique_items = deduplicator.deduplicate(collected_items)
     removed_dups = len(collected_items) - len(unique_items)
     print(f"   -> {removed_dups} notícias duplicadas removidas ({len(unique_items)} únicas restantes).")
 
-    # 3. Filtrar itens já existentes em posts/
+    # 3. Filtrar itens já gravados em posts/
     writer = WriterAgent()
     existing_files = os.listdir("posts") if os.path.exists("posts") else []
 
@@ -59,39 +62,56 @@ def run_pipeline(source_url: Optional[str] = None, process_all: bool = False):
         print("\nTodas as notícias deste feed já foram processadas na pasta posts/!")
         return
 
-    # 4. Ranking Engine (Pontuação 0-100)
-    print("\n3. [RankingEngine] Ranqueando relevância das notícias...")
+    # 4. Agente Classificador
+    print("\n3. [ClassifierAgent] Classificando categorias e tags técnicas...")
+    classifier = ClassifierAgent()
+    classification_result = classifier.classify(unprocessed_items[0])
+    print(f"   -> Categoria Principal: {classification_result.primary_category}")
+    print(f"   -> Categorias Secundárias: {', '.join(classification_result.secondary_categories)}")
+
+    # 5. Agente Priorizador
+    print("\n4. [PrioritizerAgent] Avaliando prioridade editorial...")
+    prioritizer = PrioritizerAgent()
+    priority_decision = prioritizer.evaluate(unprocessed_items[0])
+    print(f"   -> Score Editorial: {priority_decision.priority_score}/100 | Publicar: {'SIM' if priority_decision.should_publish else 'NÃO'}")
+
+    # 6. Ranking Engine
+    print("\n5. [RankingEngine] Ranqueando relevância das notícias...")
     scorer = ContentScorer()
     ranked_items = scorer.rank_items(unprocessed_items)
+    print("   -> Destaque selecionado pelo ranking:")
+    target_item = ranked_items[0].item
+    print(f"      Score {ranked_items[0].score}/100: \"{target_item.title}\"")
 
-    print("   -> Ranking dos principais destaques:")
-    for idx, r in enumerate(ranked_items[:3], 1):
-        topics_str = ", ".join(r.matched_topics) if r.matched_topics else "Geral"
-        print(f"      #{idx} Score {r.score}/100: \"{r.item.title}\" (Tópicos: {topics_str})")
-
-    items_to_process = [r.item for r in ranked_items] if process_all else [ranked_items[0].item]
+    items_to_process = [r.item for r in ranked_items] if process_all else [target_item]
 
     summarizer = SummarizerAgent()
+    critic = CriticAgent()
 
-    for idx, target_item in enumerate(items_to_process, 1):
-        print(f"\n--- [{idx}/{len(items_to_process)}] Processando Destaque: \"{target_item.title}\" ---")
+    for idx, item in enumerate(items_to_process, 1):
+        print(f"\n--- [{idx}/{len(items_to_process)}] Processando: \"{item.title}\" ---")
 
-        # 5. Agente Sumarizador
-        print("4. [SummarizerAgent] Gerando resumo estruturado via IA...")
-        summary_result = summarizer.summarize(target_item)
-        print(f"   -> Tópicos identificados: {', '.join(summary_result.topics)}")
+        # 7. Agente Sumarizador
+        print("6. [SummarizerAgent] Gerando resumo estruturado...")
+        summary_result = summarizer.summarize(item)
+        print(f"   -> Tópicos: {', '.join(summary_result.topics)}")
 
-        # Re-calcula o ranking refinado com a nota da IA
-        refined_rank = scorer.score_content(target_item, summary=summary_result)
-        print(f"   -> Score refinado final: {refined_rank.score}/100")
-
-        # 6. Agente Redator
-        print("5. [WriterAgent] Redigindo post em Markdown...")
+        # 8. Agente Redator
+        print("7. [WriterAgent] Redigindo post em Markdown...")
         post_content = writer.write_post(summary_result)
-        print(f"   -> Post salvo em: {post_content.file_path}")
+
+        # 9. Agente Crítico / Revisor
+        print("8. [CriticAgent] Revisando e polindo o artigo...")
+        review_result = critic.review(post_content.content_md)
+        print(f"   -> Nota de Qualidade Editorial: {review_result.quality_score}/10.0")
+
+        # Atualiza o arquivo final com o conteúdo revisado pelo CriticAgent se aprovado
+        if review_result.revised_markdown and review_result.approved:
+            writer.service._save_to_disk(post_content.file_path, review_result.revised_markdown)
+            print(f"   -> Post revisado salvo em: {post_content.file_path}")
 
     print("\n==================================================")
-    print("PIPELINE CONCLUÍDO COM SUCESSO!")
+    print("PIPELINE MULTIAGENTE CONCLUÍDO COM SUCESSO!")
     print("==================================================")
 
 
