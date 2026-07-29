@@ -13,6 +13,7 @@ from app.agents.prioritizer import PrioritizerAgent
 from app.agents.summarizer import SummarizerAgent
 from app.agents.writer import WriterAgent
 from app.preprocess import ContentDeduplicator
+from app.publish import BannerGenerator
 from app.ranking import ContentScorer
 
 
@@ -91,12 +92,7 @@ def run_pipeline(
 
     summarizer = SummarizerAgent()
     critic = CriticAgent()
-
-    image_asset = (
-        "posts/images/python_clean_code_linkedin_banner.png"
-        if os.path.exists("posts/images/python_clean_code_linkedin_banner.png")
-        else None
-    )
+    banner_generator = BannerGenerator(output_dir="posts/images")
 
     for idx, item in enumerate(items_to_process, 1):
         print(f"\n--- [{idx}/{len(items_to_process)}] Processando: \"{item.title}\" ---")
@@ -106,11 +102,21 @@ def run_pipeline(
         summary_result = summarizer.summarize(item)
         print(f"   -> Tópicos: {', '.join(summary_result.topics)}")
 
+        # Gerador de Imagem / Banner Visual Dinâmico para a Notícia
+        print("   -> [BannerGenerator] Gerando imagem de capa personalizada...")
+        item_slug = writer.service._slugify(item.title)
+        image_path = banner_generator.generate_banner(
+            title=item.title,
+            topics=summary_result.topics,
+            slug=item_slug,
+        )
+        print(f"   -> Imagem criada: {image_path}")
+
         # 8. Agente Redator
         print(f"7. [WriterAgent] Redigindo post para formato {platform.upper()}...")
         if platform == "linkedin":
             post_content = writer.write_linkedin_post(
-                summary_result, image_path=image_asset
+                summary_result, image_path=image_path
             )
         else:
             post_content = writer.write_post(summary_result)
