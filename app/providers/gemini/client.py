@@ -71,7 +71,8 @@ class GeminiClient:
             except Exception as error:
                 error_msg = str(error).lower()
                 if attempt < max_retries - 1 and ("503" in error_msg or "unavailable" in error_msg or "429" in error_msg or "resource_exhausted" in error_msg):
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(1.5 * (attempt + 1))
+                    model = "gemini-3.5-flash-lite"
                     continue
                 self._handle_exception(error)
 

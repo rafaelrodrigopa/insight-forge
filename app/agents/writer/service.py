@@ -4,7 +4,7 @@ import re
 from typing import Optional
 
 from app.agents.summarizer.schemas import SummaryResult
-from app.agents.writer.prompt import WRITER_SYSTEM_PROMPT
+from app.agents.writer.prompt import LINKEDIN_WRITER_SYSTEM_PROMPT, WRITER_SYSTEM_PROMPT
 from app.agents.writer.schemas import PostContent
 from app.providers.base import BaseLLMProvider
 from app.providers.gemini import GeminiChat
@@ -22,6 +22,65 @@ class WriterService:
     ):
         self.llm = llm_provider or GeminiChat()
         self.posts_dir = posts_dir
+
+    def generate_linkedin_post(
+        self,
+        summary: SummaryResult,
+        publish_date: Optional[str] = None,
+        image_path: Optional[str] = None,
+    ) -> PostContent:
+        """
+        Gera um post em formato otimizado para o LinkedIn e o salva no disco.
+        """
+        date_str = publish_date or datetime.now().strftime("%Y-%m-%d")
+        slug = f"linkedin-{self._slugify(summary.title)}"
+
+        user_prompt = (
+            f"Crie um post de alto engajamento para o LinkedIn baseado nas seguintes informações:\n\n"
+            f"Título Original: {summary.title}\n"
+            f"Resumo Executivo: {summary.summary}\n"
+            f"Pontos Chave:\n"
+            + "\n".join(f"- {pt}" for pt in summary.key_points)
+            + f"\nTópicos: {', '.join(summary.topics)}\n"
+            f"Fonte Original: {summary.source_url or 'N/A'}\n"
+        )
+
+        try:
+            response = self.llm.generate(
+                prompt=user_prompt,
+                system=LINKEDIN_WRITER_SYSTEM_PROMPT,
+                temperature=0.6,
+            )
+            raw_markdown = response.text.strip()
+        except Exception as error:
+            raw_markdown = self._build_fallback_markdown(summary, str(error))
+
+        if image_path:
+            image_filename = os.path.basename(image_path)
+            raw_markdown += f"\n\n![Imagem Ilustrativa](images/{image_filename})"
+
+        full_markdown = self._add_frontmatter_if_missing(
+            raw_markdown=raw_markdown,
+            title=summary.title,
+            date_str=date_str,
+            topics=summary.topics,
+            source_url=summary.source_url,
+        )
+
+        filename = f"{date_str}-{slug}.md"
+        file_path = os.path.join(self.posts_dir, filename)
+
+        self._save_to_disk(file_path, full_markdown)
+
+        return PostContent(
+            title=summary.title,
+            slug=slug,
+            date=date_str,
+            content_md=full_markdown,
+            topics=summary.topics,
+            source_url=summary.source_url,
+            file_path=file_path,
+        )
 
     def generate_post(
         self, summary: SummaryResult, publish_date: Optional[str] = None

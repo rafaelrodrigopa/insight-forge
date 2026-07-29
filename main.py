@@ -16,11 +16,15 @@ from app.preprocess import ContentDeduplicator
 from app.ranking import ContentScorer
 
 
-def run_pipeline(source_url: Optional[str] = None, process_all: bool = False):
+def run_pipeline(
+    source_url: Optional[str] = None,
+    process_all: bool = False,
+    platform: str = "markdown",
+):
     url = source_url or "https://realpython.com/atom.xml"
 
     print("==================================================")
-    print("Insight Forge -- Pipeline Multiagente de Conteúdo")
+    print(f"Insight Forge -- Pipeline Multiagente ({platform.upper()})")
     print("==================================================")
     print(f"Fonte configurada: {url}\n")
 
@@ -88,6 +92,12 @@ def run_pipeline(source_url: Optional[str] = None, process_all: bool = False):
     summarizer = SummarizerAgent()
     critic = CriticAgent()
 
+    image_asset = (
+        "posts/images/python_clean_code_linkedin_banner.png"
+        if os.path.exists("posts/images/python_clean_code_linkedin_banner.png")
+        else None
+    )
+
     for idx, item in enumerate(items_to_process, 1):
         print(f"\n--- [{idx}/{len(items_to_process)}] Processando: \"{item.title}\" ---")
 
@@ -97,17 +107,24 @@ def run_pipeline(source_url: Optional[str] = None, process_all: bool = False):
         print(f"   -> Tópicos: {', '.join(summary_result.topics)}")
 
         # 8. Agente Redator
-        print("7. [WriterAgent] Redigindo post em Markdown...")
-        post_content = writer.write_post(summary_result)
+        print(f"7. [WriterAgent] Redigindo post para formato {platform.upper()}...")
+        if platform == "linkedin":
+            post_content = writer.write_linkedin_post(
+                summary_result, image_path=image_asset
+            )
+        else:
+            post_content = writer.write_post(summary_result)
 
         # 9. Agente Crítico / Revisor
-        print("8. [CriticAgent] Revisando e polindo o artigo...")
+        print("8. [CriticAgent] Revisando e polindo o post...")
         review_result = critic.review(post_content.content_md)
         print(f"   -> Nota de Qualidade Editorial: {review_result.quality_score}/10.0")
 
         # Atualiza o arquivo final com o conteúdo revisado pelo CriticAgent se aprovado
         if review_result.revised_markdown and review_result.approved:
-            writer.service._save_to_disk(post_content.file_path, review_result.revised_markdown)
+            writer.service._save_to_disk(
+                post_content.file_path, review_result.revised_markdown
+            )
             print(f"   -> Post revisado salvo em: {post_content.file_path}")
 
     print("\n==================================================")
@@ -118,11 +135,14 @@ def run_pipeline(source_url: Optional[str] = None, process_all: bool = False):
 if __name__ == "__main__":
     source_arg = None
     all_flag = False
+    platform_arg = "markdown"
 
     for arg in sys.argv[1:]:
         if arg == "--all":
             all_flag = True
+        elif arg == "--linkedin":
+            platform_arg = "linkedin"
         elif not arg.startswith("--"):
             source_arg = arg
 
-    run_pipeline(source_arg, process_all=all_flag)
+    run_pipeline(source_arg, process_all=all_flag, platform=platform_arg)

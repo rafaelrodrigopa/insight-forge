@@ -26,6 +26,19 @@ class WriterAgent:
         """
         return self.service.generate_post(summary, publish_date=publish_date)
 
+    def write_linkedin_post(
+        self,
+        summary: SummaryResult,
+        publish_date: Optional[str] = None,
+        image_path: Optional[str] = None,
+    ) -> PostContent:
+        """
+        Gera e salva um post otimizado para o LinkedIn a partir de um SummaryResult.
+        """
+        return self.service.generate_linkedin_post(
+            summary, publish_date=publish_date, image_path=image_path
+        )
+
     def write_posts_batch(
         self, summaries: List[SummaryResult], publish_date: Optional[str] = None
     ) -> List[PostContent]:
