@@ -39,33 +39,41 @@ class GeminiClient:
         if system:
             config["system_instruction"] = system
 
-        try:
-            response = self.client.models.generate_content(
-                model=model,
-                contents=prompt,
-                config=config,
-            )
+        import time
 
-            finish_reason = None
-            if hasattr(response, "candidates") and response.candidates:
-                candidate = response.candidates[0]
-                if hasattr(candidate, "finish_reason") and candidate.finish_reason:
-                    finish_reason = str(candidate.finish_reason)
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=config,
+                )
 
-            text_content = (
-                response.text
-                if hasattr(response, "text") and response.text is not None
-                else ""
-            )
+                finish_reason = None
+                if hasattr(response, "candidates") and response.candidates:
+                    candidate = response.candidates[0]
+                    if hasattr(candidate, "finish_reason") and candidate.finish_reason:
+                        finish_reason = str(candidate.finish_reason)
 
-            return LLMResponse(
-                text=text_content,
-                model=model,
-                finish_reason=finish_reason,
-                raw_response=response,
-            )
-        except Exception as error:
-            self._handle_exception(error)
+                text_content = (
+                    response.text
+                    if hasattr(response, "text") and response.text is not None
+                    else ""
+                )
+
+                return LLMResponse(
+                    text=text_content,
+                    model=model,
+                    finish_reason=finish_reason,
+                    raw_response=response,
+                )
+            except Exception as error:
+                error_msg = str(error).lower()
+                if attempt < max_retries - 1 and ("503" in error_msg or "unavailable" in error_msg or "429" in error_msg or "resource_exhausted" in error_msg):
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                self._handle_exception(error)
 
     @staticmethod
     def _handle_exception(error: Exception):
