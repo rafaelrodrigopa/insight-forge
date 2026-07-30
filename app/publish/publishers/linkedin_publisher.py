@@ -136,22 +136,44 @@ class LinkedInPublisherAdapter(BasePublisher):
     def _find_associated_image(post: PostContent) -> Optional[str]:
         """
         Localiza o arquivo de imagem PNG associado a este post na pasta posts/images.
+        Hierarquia de Resolução:
+        1. Atributo explícito post.image_path (se existir no disco)
+        2. Tag de imagem Markdown ![...](images/...) em post.content_md
+        3. Busca em posts/images/ por correspondência de slug ou data
+        4. Fallback: imagem PNG mais recentemente modificada/criada (mtime decrescente)
         """
+        # 1. Atributo direto post.image_path
+        if getattr(post, "image_path", None) and os.path.exists(post.image_path):
+            return post.image_path
+
         images_dir = "posts/images"
         if not os.path.exists(images_dir):
             return None
 
-        # Tenta corresponder pelo slug limpo
-        clean_slug = post.slug.replace("linkedin-", "")
-        for filename in os.listdir(images_dir):
-            if filename.endswith(".png") and clean_slug in filename:
-                return os.path.join(images_dir, filename)
+        # 2. Busca por tag de imagem no Markdown
+        if post.content_md:
+            img_match = re.search(r"!\[.*?\]\((?:posts/)?(?:images/)?([^\)]+)\)", post.content_md)
+            if img_match:
+                img_name = os.path.basename(img_match.group(1))
+                cand_path = os.path.join(images_dir, img_name)
+                if os.path.exists(cand_path):
+                    return cand_path
 
-        # Fallback: pega a primeira imagem PNG da pasta se disponível
+        # 3. Correspondência por slug ou data
+        clean_slug = post.slug.replace("linkedin-", "") if post.slug else ""
+        for filename in os.listdir(images_dir):
+            if filename.endswith(".png"):
+                if (clean_slug and clean_slug in filename) or (post.date and post.date in filename):
+                    return os.path.join(images_dir, filename)
+
+        # 4. Fallback Seguro: pega a imagem PNG MAIS RECENTE no disco (ordem decrescente de mtime)
         png_files = [
-            f for f in os.listdir(images_dir) if f.endswith(".png")
+            os.path.join(images_dir, f)
+            for f in os.listdir(images_dir)
+            if f.endswith(".png")
         ]
         if png_files:
-            return os.path.join(images_dir, png_files[0])
+            png_files.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+            return png_files[0]
 
         return None

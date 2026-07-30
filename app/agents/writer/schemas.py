@@ -16,3 +16,4 @@ class PostContent:
     author: str = "Insight Forge AI Writer"
     source_url: Optional[str] = None
     file_path: Optional[str] = None
+    image_path: Optional[str] = None

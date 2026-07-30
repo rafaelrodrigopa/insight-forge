@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import sys
 from typing import Optional
@@ -113,11 +114,13 @@ def run_pipeline(
 
         # Gerador de Imagem / Banner Visual Dinâmico para a Notícia
         print("   -> [BannerGenerator] Gerando imagem de capa personalizada...")
+        today_str = datetime.now().strftime("%Y-%m-%d")
         item_slug = writer.service._slugify(item.title)
         image_path = banner_generator.generate_banner(
             title=item.title,
             topics=summary_result.topics,
             slug=item_slug,
+            date_str=today_str,
         )
         print(f"   -> Imagem criada: {image_path}")
 
@@ -129,6 +132,7 @@ def run_pipeline(
             )
         else:
             post_content = writer.write_post(summary_result)
+            post_content.image_path = image_path
 
         # 9. Agente Crítico / Revisor
         print("8. [CriticAgent] Revisando e polindo o post...")

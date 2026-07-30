@@ -80,6 +80,7 @@ class WriterService:
             topics=summary.topics,
             source_url=summary.source_url,
             file_path=file_path,
+            image_path=image_path,
         )
 
     def generate_post(

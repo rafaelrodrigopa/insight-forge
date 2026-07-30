@@ -74,6 +74,33 @@ class TestPublisherEcosystem(unittest.TestCase):
         self.assertEqual(len(manager_with_linkedin.publishers), 2)
         self.assertIsInstance(manager_with_linkedin.publishers[1], LinkedInPublisherAdapter)
 
+    def test_find_associated_image_direct_path(self):
+        post = PostContent(
+            title="Teste Direct",
+            slug="teste-direct",
+            date="2026-07-30",
+            content_md="...",
+            image_path=__file__,  # Usa este arquivo de teste como caminho existente no disco
+        )
+        resolved = LinkedInPublisherAdapter._find_associated_image(post)
+        self.assertEqual(resolved, __file__)
+
+    def test_find_associated_image_markdown_link(self):
+        with patch("os.path.exists") as mock_exists:
+            def side_effect(path):
+                return "custom-image.png" in path or "posts" in path
+            mock_exists.side_effect = side_effect
+
+            post = PostContent(
+                title="Teste Markdown",
+                slug="teste-markdown",
+                date="2026-07-30",
+                content_md="# Titulo\n![Imagem](images/custom-image.png)",
+            )
+            resolved = LinkedInPublisherAdapter._find_associated_image(post)
+            self.assertIsNotNone(resolved)
+            self.assertIn("custom-image.png", resolved)
+
 
 if __name__ == "__main__":
     unittest.main()
