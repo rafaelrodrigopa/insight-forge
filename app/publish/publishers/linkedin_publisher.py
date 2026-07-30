@@ -36,17 +36,25 @@ class LinkedInFormatter:
         # 4. Remove marcadores de bloco de código ```python ... ```
         text = re.sub(r"```[\w]*\n?", "", text)
 
-        # 5. Remove crases simples de código `código` -> código
+        # 5. Converte links markdown [texto](url) para apenas a URL pura navegável no LinkedIn
+        text = re.sub(r"\[([^\]]+)\]\((https?://[^\)]+)\)", r"\2", text)
+
+        # 6. Remove crases simples de código `código` -> código
         text = re.sub(r"`([^`]+)`", r"\1", text)
 
-        # 6. Remove itálicos/negritos de markdown *texto* ou _texto_ preservando dunders como __all__
-        text = re.sub(r"\*([^*]+)\*", r"\1", text)
+        # 7. Remove negrito **texto** sem cruzar novas linhas \n
+        text = re.sub(r"\*\*([^\*\n]+)\*\*", r"\1", text)
+
+        # 8. Remove itálico *texto* apenas se não for asterisco isolado (sem cruzar \n)
+        text = re.sub(r"(?<!\s)\*([^\*\n]+)\*(?!\s)", r"\1", text)
+
+        # 9. Remove itálicos _texto_ preservando dunders como __all__
         text = re.sub(r"(?<!\w)_([^_]+)_(?!\w)", r"\1", text)
 
-        # 7. Remove linhas divisórias ---
+        # 10. Remove linhas divisórias ---
         text = re.sub(r"^\s*---\s*$", "", text, flags=re.MULTILINE)
 
-        # 8. Ajusta múltiplos saltos de linha
+        # 11. Ajusta múltiplos saltos de linha
         text = re.sub(r"\n{3,}", "\n\n", text)
 
         return text.strip()
