@@ -39,14 +39,7 @@ class LinkedInPublisherAdapter(BasePublisher):
             # Remove frontmatter YAML antes de postar no texto do LinkedIn
             clean_text = self._strip_frontmatter(post.content_md)
 
-            if post.source_url:
-                response = publisher.publish_article(
-                    text=clean_text,
-                    url=post.source_url,
-                    title=post.title,
-                )
-            else:
-                response = publisher.publish_text(text=clean_text)
+            response = publisher.publish_text(text=clean_text)
 
             if response and (
                 getattr(response, "status_code", 0) in (200, 201)
