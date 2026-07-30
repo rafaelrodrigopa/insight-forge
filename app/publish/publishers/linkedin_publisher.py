@@ -14,11 +14,8 @@ class LinkedInFormatter:
 
     @staticmethod
     def format_for_linkedin(text: str) -> str:
-        # 1. Remove frontmatter YAML (--- ... ---)
-        if text.startswith("---"):
-            parts = text.split("---", 2)
-            if len(parts) >= 3:
-                text = parts[2]
+        # 1. Remove frontmatter YAML (--- ... ---) apenas do topo do texto
+        text = re.sub(r"^---[\s\S]*?---\s*", "", text)
 
         # 2. Remove sintaxe de imagem markdown ![alt](path)
         text = re.sub(r"!\[.*?\]\(.*?\)", "", text)

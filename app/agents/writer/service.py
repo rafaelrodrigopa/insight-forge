@@ -50,6 +50,7 @@ class WriterService:
                 prompt=user_prompt,
                 system=LINKEDIN_WRITER_SYSTEM_PROMPT,
                 temperature=0.6,
+                max_output_tokens=4096,
             )
             raw_markdown = response.text.strip()
         except Exception as error:
@@ -108,6 +109,7 @@ class WriterService:
                 prompt=user_prompt,
                 system=WRITER_SYSTEM_PROMPT,
                 temperature=0.6,
+                max_output_tokens=4096,
             )
             raw_markdown = response.text.strip()
         except Exception as error:

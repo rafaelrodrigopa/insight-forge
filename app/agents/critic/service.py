@@ -21,8 +21,13 @@ class CriticService:
                 prompt=user_prompt,
                 system=CRITIC_SYSTEM_PROMPT,
                 temperature=0.3,
+                max_output_tokens=4096,
             )
-            return self._parse_response(res.text, fallback_markdown=markdown_text)
+            return self._parse_response(
+                res.text,
+                fallback_markdown=markdown_text,
+                finish_reason=res.finish_reason,
+            )
         except Exception as err:
             return ReviewResult(
                 quality_score=8.0,
@@ -32,7 +37,11 @@ class CriticService:
             )
 
     @staticmethod
-    def _parse_response(text: str, fallback_markdown: str) -> ReviewResult:
+    def _parse_response(
+        text: str,
+        fallback_markdown: str,
+        finish_reason: Optional[str] = None,
+    ) -> ReviewResult:
         score = 8.5
         approved = True
         notes = []
@@ -66,8 +75,32 @@ class CriticService:
         )
         if content_match:
             candidate_text = content_match.group(1).strip()
-            if candidate_text and ("---" in candidate_text or "#" in candidate_text):
+            # Remove blocos de código ```markdown ... ``` envolventes se a LLM colocar
+            if candidate_text.startswith("```"):
+                candidate_text = re.sub(r"^```[\w]*\n?", "", candidate_text)
+                candidate_text = re.sub(r"\n?```$", "", candidate_text).strip()
+
+            # Validação rigorosa contra truncamento:
+            # 1. Ignora se o finish_reason indicar limite de tokens
+            # 2. Ignora se o texto revisado tiver menos de 75% do tamanho do texto original
+            is_length_truncated = str(finish_reason or "").upper() in [
+                "MAX_TOKENS",
+                "LENGTH",
+                "MAX_TOKENS_REACHED",
+            ]
+            is_too_short = len(candidate_text) < (0.75 * len(fallback_markdown))
+
+            if (
+                candidate_text
+                and not is_length_truncated
+                and not is_too_short
+                and ("---" in candidate_text or "#" in candidate_text)
+            ):
                 revised = candidate_text
+            elif is_too_short or is_length_truncated:
+                notes.append(
+                    "Revisão descartada por truncamento de saída do modelo. Mantida versão original."
+                )
 
         return ReviewResult(
             quality_score=score,
