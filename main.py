@@ -30,20 +30,26 @@ def run_pipeline(
     print("==================================================")
     print(f"Insight Forge -- Pipeline Multiagente ({platform.upper()})")
     print("==================================================")
-    print(f"Fonte configurada: {url}\n")
 
     # 1. Agente Coletor
-    print("1. [CollectorAgent] Coletando notícias do feed...")
     collector = CollectorAgent()
     try:
-        collected_items = collector.collect(url, analyze_with_ai=False)
-        print(f"   -> {len(collected_items)} itens coletados no feed.")
+        if source_url:
+            print(f"Fonte configurada (Única): {source_url}\n")
+            print("1. [CollectorAgent] Coletando notícias da fonte indicada...")
+            collected_items = collector.collect(source_url, analyze_with_ai=False)
+        else:
+            print("Fonte configurada: Pool Multi-Feeds (Power BI, IA, Cloud, Geral & Mercado)\n")
+            print("1. [CollectorAgent] Coletando notícias do Pool de Feeds RSS...")
+            collected_items = collector.collect_pool(max_items_per_feed=5, analyze_with_ai=False)
+
+        print(f"   -> {len(collected_items)} itens totais coletados no pool.")
     except Exception as err:
-        print(f"Erro ao coletar feed RSS: {err}")
+        print(f"Erro ao coletar feeds RSS: {err}")
         return
 
     if not collected_items:
-        print("Nenhum item encontrado na fonte informada.")
+        print("Nenhum item encontrado nas fontes informadas.")
         return
 
     # 2. Preprocessamento & Deduplicação

@@ -7,17 +7,25 @@ class TopicsConfig:
     """
 
     DEFAULT_TOPICS: Dict[str, int] = {
-        "ia": 10,
-        "python": 10,
-        "engenharia_de_dados": 10,
+        "power_bi": 10,
+        "powerbi": 10,
+        "microsoft_fabric": 10,
+        "fabric": 10,
+        "dax": 10,
         "analytics": 10,
-        "bigquery": 9,
-        "power_bi": 9,
-        "sql": 8,
-        "cloud": 8,
-        "automacao": 8,
-        "linkedin": 7,
-        "carreira": 5,
+        "bigquery": 10,
+        "dataform": 10,
+        "engenharia_de_dados": 10,
+        "data_engineering": 10,
+        "python": 9,
+        "sql": 9,
+        "ia": 8,
+        "machine_learning": 8,
+        "cloud": 7,
+        "automacao": 7,
+        "mercado": 5,
+        "negocios": 5,
+        "tecnologia": 4,
     }
 
     def __init__(self, custom_topics: Dict[str, int] | None = None):

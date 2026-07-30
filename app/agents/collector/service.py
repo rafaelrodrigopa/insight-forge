@@ -75,3 +75,36 @@ class CollectorService:
             )
 
         return results
+
+    def collect_pool(
+        self,
+        max_items_per_feed: int = 5,
+        analyze_with_ai: bool = False,
+    ) -> List[CollectedContent]:
+        """
+        Coleta itens de todo o pool de feeds RSS configurados no FeedConfig.
+        """
+        from app.config.feeds import FeedConfig
+
+        all_collected: List[CollectedContent] = []
+        all_feeds = FeedConfig.get_all_feeds()
+
+        for feed_info in all_feeds:
+            feed_name = feed_info["name"]
+            feed_url = feed_info["url"]
+            try:
+                raw_entries = self.fetcher.fetch_feed(feed_url)
+                for entry in raw_entries[:max_items_per_feed]:
+                    item = CollectedContent(
+                        title=entry["title"],
+                        content=entry["content"],
+                        source=f"{feed_name} ({entry['source']})",
+                        url=entry["url"],
+                        published_at=entry.get("published_at"),
+                    )
+                    all_collected.append(item)
+            except Exception as err:
+                print(f"   ⚠️ Aviso ao coletar feed [{feed_name}]: {err}")
+                continue
+
+        return all_collected

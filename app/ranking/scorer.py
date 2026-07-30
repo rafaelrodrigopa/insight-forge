@@ -86,16 +86,35 @@ class ContentScorer:
         matched = []
         accumulated_weight = 0.0
 
+        # Mapeamento com variações regex precisas para evitar falsos positivos (ex: "ia" dentro de "notícia")
+        topic_patterns = {
+            "power_bi": r"\b(power\s*bi|dax|powerquery)\b",
+            "powerbi": r"\b(power\s*bi|dax|powerquery)\b",
+            "microsoft_fabric": r"\b(microsoft\s+fabric|fabric)\b",
+            "fabric": r"\b(microsoft\s+fabric|fabric)\b",
+            "dax": r"\bdax\b",
+            "analytics": r"\b(analytics|bi|business\s+intelligence|dataform)\b",
+            "bigquery": r"\b(bigquery|gcp\s+analytics)\b",
+            "dataform": r"\bdataform\b",
+            "engenharia_de_dados": r"\b(engenharia\s+de\s+dados|data\s+engineering|pipeline\s+de\s+dados)\b",
+            "data_engineering": r"\b(data\s+engineering|engenharia\s+de\s+dados)\b",
+            "python": r"\bpython\b",
+            "sql": r"\bsql\b",
+            "ia": r"\b(ia|inteligência\s+artificial|artificial\s+intelligence|llm|gpt)\b",
+            "machine_learning": r"\b(machine\s+learning|aprendizado\s+de\s+máquina)\b",
+            "cloud": r"\b(cloud|nuvem|azure|gcp|aws)\b",
+            "automacao": r"\b(automação|automation)\b",
+        }
+
         for topic in self.topics_config.get_all_topics():
             weight = self.topics_config.get_weight(topic)
-            # Busca pela palavra completa ou variações (ex: ia, python, sql)
-            pattern = r"\b" + re.escape(topic.replace("_", " ")) + r"\b"
-            if re.search(pattern, text, re.IGNORECASE) or topic in text:
+            pattern = topic_patterns.get(
+                topic, r"\b" + re.escape(topic.replace("_", " ")) + r"\b"
+            )
+            if re.search(pattern, text, re.IGNORECASE):
                 matched.append(topic)
                 accumulated_weight += weight
 
-        # Converte o acúmulo de pesos em uma pontuação de 0 a 40 pts
-        # (ex: peso 10 = 20pts; múltiplos tópicos atingem 40pts)
         score = min(40.0, accumulated_weight * 2.0)
         return round(score, 1), matched
 

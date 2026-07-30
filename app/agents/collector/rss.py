@@ -15,7 +15,7 @@ class RSSFetcher:
     """
 
     DEFAULT_USER_AGENT = (
-        "InsightForge/1.0 (+https://github.com/rafaelrodrigopa/insight-forge)"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     )
 
     def fetch_feed(self, url: str, timeout: int = 15) -> List[Dict[str, Any]]:

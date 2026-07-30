@@ -24,11 +24,11 @@ class TestConfigModule(unittest.TestCase):
 
     def test_topics_config_default_weights(self):
         """Testa se os pesos padrões dos tópicos estão corretos."""
-        self.assertEqual(topics_config.get_weight("ia"), 10)
-        self.assertEqual(topics_config.get_weight("python"), 10)
-        self.assertEqual(topics_config.get_weight("bigquery"), 9)
-        self.assertEqual(topics_config.get_weight("sql"), 8)
-        self.assertEqual(topics_config.get_weight("carreira"), 5)
+        self.assertEqual(topics_config.get_weight("power_bi"), 10)
+        self.assertEqual(topics_config.get_weight("python"), 9)
+        self.assertEqual(topics_config.get_weight("bigquery"), 10)
+        self.assertEqual(topics_config.get_weight("sql"), 9)
+        self.assertEqual(topics_config.get_weight("ia"), 8)
         self.assertEqual(topics_config.get_weight("desconhecido"), 0)
 
     def test_topics_config_methods(self):
@@ -36,11 +36,11 @@ class TestConfigModule(unittest.TestCase):
         cfg = TopicsConfig()
 
         # Insensibilidade a maiúsculas/minúsculas e espaços
-        self.assertEqual(cfg.get_weight("  PYTHON  "), 10)
+        self.assertEqual(cfg.get_weight("  POWER_BI  "), 10)
 
         # Relevância
-        self.assertTrue(cfg.is_relevant("ia", min_weight=5))
-        self.assertFalse(cfg.is_relevant("carreira", min_weight=8))
+        self.assertTrue(cfg.is_relevant("power_bi", min_weight=5))
+        self.assertFalse(cfg.is_relevant("tecnologia", min_weight=8))
 
         # Alteração de peso
         cfg.set_weight("novo_topico", 7)

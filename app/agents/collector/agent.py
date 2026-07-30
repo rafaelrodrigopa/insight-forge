@@ -27,3 +27,13 @@ class CollectorAgent:
         Executa o processo de coleta de conteúdo de uma fonte (URL RSS ou texto bruto).
         """
         return self.service.collect(source, analyze_with_ai=analyze_with_ai)
+
+    def collect_pool(
+        self, max_items_per_feed: int = 5, analyze_with_ai: bool = False
+    ) -> List[CollectedContent]:
+        """
+        Coleta notícias de todo o pool de feeds RSS configurados no sistema.
+        """
+        return self.service.collect_pool(
+            max_items_per_feed=max_items_per_feed, analyze_with_ai=analyze_with_ai
+        )
