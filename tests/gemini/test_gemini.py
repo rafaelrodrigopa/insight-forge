@@ -20,8 +20,8 @@ class TestGeminiProvider(unittest.TestCase):
 
     def test_gemini_models_constants(self):
         """Testa se as constantes dos modelos estão definidas."""
-        self.assertEqual(GeminiModels.FLASH, "gemini-2.0-flash")
-        self.assertEqual(GeminiModels.PRO, "gemini-1.5-pro")
+        self.assertEqual(GeminiModels.FLASH, "gemini-3.6-flash")
+        self.assertEqual(GeminiModels.PRO, "gemini-2.5-pro")
 
     @patch("app.providers.gemini.client.genai.Client")
     def test_client_generate_returns_llm_response(self, mock_genai_client_cls):
