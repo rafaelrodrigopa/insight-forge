@@ -279,6 +279,8 @@ Pull Request
 - Geração automática de Pull Requests.
 - Revisão humana antes da publicação.
 
+**Status:** ✅ Concluído
+
 ---
 
 # Sprint 10 — Publicadores
