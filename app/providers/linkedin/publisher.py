@@ -127,3 +127,49 @@ class LinkedInPublisher:
         }
 
         return self.client.post("/rest/posts", payload)
+
+    def react_to_post(self, post_urn: str, reaction_type: str = "LIKE"):
+        """
+        Reage (curte/aplaude/etc) a um post do LinkedIn pelo URN do post.
+        reaction_type: 'LIKE', 'PRAISE', 'EMPATHY', 'INTEREST', 'ENTERTAINMENT', 'APPRECIATION'
+        """
+        import urllib.parse
+        encoded_urn = urllib.parse.quote(post_urn)
+        payload = {
+            "root": post_urn,
+            "reactionType": reaction_type.upper()
+        }
+        return self.client.post("/rest/reactions", payload)
+
+    def comment_on_post(self, post_urn: str, text: str):
+        """
+        Adiciona um comentário em um post do LinkedIn pelo URN do post.
+        """
+        import urllib.parse
+        encoded_urn = urllib.parse.quote(post_urn)
+        payload = {
+            "actor": self._get_person_urn(),
+            "message": {
+                "text": text
+            }
+        }
+        endpoint = f"/rest/socialActions/{encoded_urn}/comments"
+        return self.client.post(endpoint, payload)
+
+    def reshare_post(self, post_urn: str, commentary: str = ""):
+        """
+        Re-compartilha (reposta) um post do LinkedIn no seu próprio feed com um comentário opcional.
+        """
+        payload = {
+            "author": self._get_person_urn(),
+            "commentary": commentary,
+            "visibility": "PUBLIC",
+            "distribution": {
+                "feedDistribution": "MAIN_FEED"
+            },
+            "reshareContext": {
+                "parent": post_urn
+            },
+            "lifecycleState": "PUBLISHED"
+        }
+        return self.client.post("/rest/posts", payload)
