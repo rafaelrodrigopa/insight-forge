@@ -301,6 +301,8 @@ Adicionar múltiplos destinos para publicação.
 - Threads
 - X (Twitter)
 
+**Status:** ✅ Concluído
+
 ---
 
 # MVP

@@ -13,7 +13,7 @@ from app.agents.prioritizer import PrioritizerAgent
 from app.agents.summarizer import SummarizerAgent
 from app.agents.writer import WriterAgent
 from app.preprocess import ContentDeduplicator
-from app.publish import BannerGenerator
+from app.publish import BannerGenerator, PublisherManager
 from app.ranking import ContentScorer
 
 
@@ -21,6 +21,7 @@ def run_pipeline(
     source_url: Optional[str] = None,
     process_all: bool = False,
     platform: str = "markdown",
+    enable_publish: bool = False,
 ):
     url = source_url or "https://realpython.com/atom.xml"
 
@@ -93,6 +94,9 @@ def run_pipeline(
     summarizer = SummarizerAgent()
     critic = CriticAgent()
     banner_generator = BannerGenerator(output_dir="posts/images")
+    publisher_manager = PublisherManager.create_default(
+        enable_linkedin=(platform == "linkedin" and enable_publish)
+    )
 
     for idx, item in enumerate(items_to_process, 1):
         print(f"\n--- [{idx}/{len(items_to_process)}] Processando: \"{item.title}\" ---")
@@ -131,7 +135,15 @@ def run_pipeline(
             writer.service._save_to_disk(
                 post_content.file_path, review_result.revised_markdown
             )
+            post_content.content_md = review_result.revised_markdown
             print(f"   -> Post revisado salvo em: {post_content.file_path}")
+
+        # 10. Disparo dos Publicadores Multi-Canal
+        print("\n9. [PublisherManager] Disparando publicadores ativos...")
+        results = publisher_manager.publish_all(post_content)
+        for res in results:
+            status_icon = "✅" if res.success else "⚠️"
+            print(f"   {status_icon} [{res.publisher_name}]: {res.message}")
 
     print("\n==================================================")
     print("PIPELINE MULTIAGENTE CONCLUÍDO COM SUCESSO!")
@@ -142,13 +154,21 @@ if __name__ == "__main__":
     source_arg = None
     all_flag = False
     platform_arg = "markdown"
+    publish_flag = False
 
     for arg in sys.argv[1:]:
         if arg == "--all":
             all_flag = True
         elif arg == "--linkedin":
             platform_arg = "linkedin"
+        elif arg == "--publish":
+            publish_flag = True
         elif not arg.startswith("--"):
             source_arg = arg
 
-    run_pipeline(source_arg, process_all=all_flag, platform=platform_arg)
+    run_pipeline(
+        source_arg,
+        process_all=all_flag,
+        platform=platform_arg,
+        enable_publish=publish_flag,
+    )
