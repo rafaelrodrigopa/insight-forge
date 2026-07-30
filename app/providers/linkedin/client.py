@@ -9,7 +9,7 @@ class LinkedInClient:
 
     def __init__(self):
 
-        self.access_token = settings.LINKEDIN_ACCESS_TOKEN
+        self.access_token = os.getenv("LINKEDIN_ACCESS_TOKEN") or settings.LINKEDIN_ACCESS_TOKEN
 
         if not self.access_token:
             raise ValueError(

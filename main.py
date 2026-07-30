@@ -22,6 +22,7 @@ def run_pipeline(
     process_all: bool = False,
     platform: str = "markdown",
     enable_publish: bool = False,
+    force_process: bool = False,
 ):
     url = source_url or "https://realpython.com/atom.xml"
 
@@ -56,16 +57,20 @@ def run_pipeline(
     existing_files = os.listdir("posts") if os.path.exists("posts") else []
 
     unprocessed_items = []
-    for item in unique_items:
-        slug = writer.service._slugify(item.title)
-        already_exists = any(slug in filename for filename in existing_files)
-        if not already_exists:
-            unprocessed_items.append(item)
+    if force_process:
+        unprocessed_items = unique_items
+    else:
+        for item in unique_items:
+            slug = writer.service._slugify(item.title)
+            already_exists = any(slug in filename for filename in existing_files)
+            if not already_exists:
+                unprocessed_items.append(item)
 
-    print(f"   -> {len(unprocessed_items)} notícias inéditas disponíveis.")
+    print(f"   -> {len(unprocessed_items)} notícias a processar.")
 
     if not unprocessed_items:
         print("\nTodas as notícias deste feed já foram processadas na pasta posts/!")
+        print("Dica: Use a flag --force se desejar re-processar e publicar novamente.")
         return
 
     # 4. Agente Classificador
@@ -155,6 +160,7 @@ if __name__ == "__main__":
     all_flag = False
     platform_arg = "markdown"
     publish_flag = False
+    force_flag = False
 
     for arg in sys.argv[1:]:
         if arg == "--all":
@@ -163,6 +169,8 @@ if __name__ == "__main__":
             platform_arg = "linkedin"
         elif arg == "--publish":
             publish_flag = True
+        elif arg == "--force":
+            force_flag = True
         elif not arg.startswith("--"):
             source_arg = arg
 
@@ -171,4 +179,5 @@ if __name__ == "__main__":
         process_all=all_flag,
         platform=platform_arg,
         enable_publish=publish_flag,
+        force_process=force_flag,
     )
