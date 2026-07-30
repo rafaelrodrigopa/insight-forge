@@ -54,6 +54,9 @@ class LinkedInFormatter:
         # 11. Ajusta múltiplos saltos de linha
         text = re.sub(r"\n{3,}", "\n\n", text)
 
+        # 12. Compacta espaçamento entre itens de lista com emojis para economizar altura vertical no feed
+        text = re.sub(r"\n\n(?=[\u2600-\u27bf\U0001f300-\U0001f6ff\U0001f900-\U0001f9ff])", "\n", text)
+
         return text.strip()
 
 
