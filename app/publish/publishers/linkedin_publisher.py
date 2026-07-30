@@ -39,9 +39,9 @@ class LinkedInFormatter:
         # 5. Remove crases simples de código `código` -> código
         text = re.sub(r"`([^`]+)`", r"\1", text)
 
-        # 6. Remove itálicos/negritos de markdown *texto* ou _texto_ -> texto
+        # 6. Remove itálicos/negritos de markdown *texto* ou _texto_ preservando dunders como __all__
         text = re.sub(r"\*([^*]+)\*", r"\1", text)
-        text = re.sub(r"_([^_]+)_", r"\1", text)
+        text = re.sub(r"(?<!\w)_([^_]+)_(?!\w)", r"\1", text)
 
         # 7. Remove linhas divisórias ---
         text = re.sub(r"^\s*---\s*$", "", text, flags=re.MULTILINE)
