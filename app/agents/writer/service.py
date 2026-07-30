@@ -65,6 +65,7 @@ class WriterService:
             date_str=date_str,
             topics=summary.topics,
             source_url=summary.source_url,
+            image_path=image_path,
         )
 
         filename = f"{date_str}-{slug}.md"
@@ -163,11 +164,13 @@ class WriterService:
         date_str: str,
         topics: list,
         source_url: Optional[str],
+        image_path: Optional[str] = None,
     ) -> str:
         if raw_markdown.startswith("---"):
             return raw_markdown
 
         topics_str = ", ".join(topics) if topics else "Geral"
+        image_str = f"image: \"images/{os.path.basename(image_path)}\"\n" if image_path else ""
         frontmatter = (
             f"---\n"
             f"title: \"{title}\"\n"
@@ -175,6 +178,7 @@ class WriterService:
             f"topics: [{topics_str}]\n"
             f"author: \"Insight Forge AI Writer\"\n"
             f"source_url: \"{source_url or ''}\"\n"
+            f"{image_str}"
             f"---\n\n"
         )
         return frontmatter + raw_markdown

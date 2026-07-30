@@ -138,9 +138,10 @@ class LinkedInPublisherAdapter(BasePublisher):
         Localiza o arquivo de imagem PNG associado a este post na pasta posts/images.
         Hierarquia de Resolução:
         1. Atributo explícito post.image_path (se existir no disco)
-        2. Tag de imagem Markdown ![...](images/...) em post.content_md
-        3. Busca em posts/images/ por correspondência de slug ou data
-        4. Fallback: imagem PNG mais recentemente modificada/criada (mtime decrescente)
+        2. Campo de imagem no Frontmatter YAML (`image: ...` ou `image_path: ...`)
+        3. Tag de imagem Markdown ![...](images/...) em post.content_md
+        4. Busca em posts/images/ por correspondência de slug ou data
+        5. Fallback: imagem PNG mais recentemente modificada/criada (mtime decrescente)
         """
         # 1. Atributo direto post.image_path
         if getattr(post, "image_path", None) and os.path.exists(post.image_path):
@@ -150,7 +151,16 @@ class LinkedInPublisherAdapter(BasePublisher):
         if not os.path.exists(images_dir):
             return None
 
-        # 2. Busca por tag de imagem no Markdown
+        # 2. Busca no Frontmatter YAML por `image: "images/xyz.png"` ou `image_path: ...`
+        if post.content_md:
+            fm_match = re.search(r"^\s*image(?:_path)?:\s*[\"']?(?:posts/)?(?:images/)?([^\"'\s\n]+)[\"']?", post.content_md, re.MULTILINE)
+            if fm_match:
+                img_name = os.path.basename(fm_match.group(1))
+                cand_path = os.path.join(images_dir, img_name)
+                if os.path.exists(cand_path):
+                    return cand_path
+
+        # 3. Busca por tag de imagem no Markdown
         if post.content_md:
             img_match = re.search(r"!\[.*?\]\((?:posts/)?(?:images/)?([^\)]+)\)", post.content_md)
             if img_match:
@@ -159,14 +169,14 @@ class LinkedInPublisherAdapter(BasePublisher):
                 if os.path.exists(cand_path):
                     return cand_path
 
-        # 3. Correspondência por slug ou data
+        # 4. Correspondência por slug ou data
         clean_slug = post.slug.replace("linkedin-", "") if post.slug else ""
         for filename in os.listdir(images_dir):
             if filename.endswith(".png"):
                 if (clean_slug and clean_slug in filename) or (post.date and post.date in filename):
                     return os.path.join(images_dir, filename)
 
-        # 4. Fallback Seguro: pega a imagem PNG MAIS RECENTE no disco (ordem decrescente de mtime)
+        # 5. Fallback Seguro: pega a imagem PNG MAIS RECENTE no disco (ordem decrescente de mtime)
         png_files = [
             os.path.join(images_dir, f)
             for f in os.listdir(images_dir)

@@ -56,6 +56,16 @@ def run_pipeline(
     # 3. Filtrar itens já gravados em posts/
     writer = WriterAgent()
     existing_files = os.listdir("posts") if os.path.exists("posts") else []
+    existing_contents = []
+    if os.path.exists("posts"):
+        for fname in existing_files:
+            if fname.endswith(".md"):
+                fpath = os.path.join("posts", fname)
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        existing_contents.append(f.read())
+                except Exception:
+                    pass
 
     unprocessed_items = []
     if force_process:
@@ -64,6 +74,9 @@ def run_pipeline(
         for item in unique_items:
             slug = writer.service._slugify(item.title)
             already_exists = any(slug in filename for filename in existing_files)
+            item_link = getattr(item, "link", None) or getattr(item, "source_url", None)
+            if not already_exists and item_link:
+                already_exists = any(item_link in content for content in existing_contents)
             if not already_exists:
                 unprocessed_items.append(item)
 
@@ -141,10 +154,19 @@ def run_pipeline(
 
         # Atualiza o arquivo final com o conteúdo revisado pelo CriticAgent se aprovado
         if review_result.revised_markdown and review_result.approved:
-            writer.service._save_to_disk(
-                post_content.file_path, review_result.revised_markdown
-            )
-            post_content.content_md = review_result.revised_markdown
+            revised_md = review_result.revised_markdown
+            if not revised_md.startswith("---"):
+                revised_md = writer.service._add_frontmatter_if_missing(
+                    raw_markdown=revised_md,
+                    title=summary_result.title,
+                    date_str=today_str,
+                    topics=summary_result.topics,
+                    source_url=summary_result.source_url,
+                    image_path=image_path,
+                )
+            writer.service._save_to_disk(post_content.file_path, revised_md)
+            post_content.content_md = revised_md
+            post_content.image_path = image_path
             print(f"   -> Post revisado salvo em: {post_content.file_path}")
 
         # 10. Disparo dos Publicadores Multi-Canal

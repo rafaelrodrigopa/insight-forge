@@ -102,5 +102,22 @@ class TestPublisherEcosystem(unittest.TestCase):
             self.assertIn("custom-image.png", resolved)
 
 
+    def test_find_associated_image_frontmatter(self):
+        with patch("os.path.exists") as mock_exists:
+            def side_effect(path):
+                return "yaml-banner.png" in path or "posts" in path
+            mock_exists.side_effect = side_effect
+
+            post = PostContent(
+                title="Teste YAML Frontmatter",
+                slug="teste-yaml-frontmatter",
+                date="2026-07-30",
+                content_md="---\ntitle: 'Teste'\nimage: 'images/yaml-banner.png'\n---\n# Conteudo",
+            )
+            resolved = LinkedInPublisherAdapter._find_associated_image(post)
+            self.assertIsNotNone(resolved)
+            self.assertIn("yaml-banner.png", resolved)
+
+
 if __name__ == "__main__":
     unittest.main()
