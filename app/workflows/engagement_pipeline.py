@@ -85,6 +85,8 @@ def run_engagement_pipeline(
                 print("   ✅ Interação realizada com sucesso no LinkedIn!")
             except Exception as err:
                 print(f"   ⚠️ Erro ao publicar interação na API do LinkedIn: {err}")
+                if "403" in str(err):
+                    print("   💡 [DICA DE PERMISSÃO]: Para liberar curtidas e comentários na API, ative o produto gratuito 'Community Management API' na sua conta de desenvolvedor do LinkedIn (https://www.linkedin.com/developers/apps).")
         else:
             print("   ℹ️ Modo de teste (sem publicação ativada).")
             history.record_interaction(
