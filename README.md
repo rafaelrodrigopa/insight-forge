@@ -19,18 +19,18 @@ O **Insight Forge** é um ecossistema autônomo baseado em **6 Agentes Especiali
 
 ```mermaid
 flowchart TD
-    A[📡 RSS / Atom Feeds] --> B[1. CollectorAgent]
-    B --> C[2. ContentDeduplicator<br/>(Cosine Similarity)]
-    C --> D[3. ClassifierAgent<br/>(Taxonomia & Tags)]
-    D --> E[4. PrioritizerAgent<br/>(Filtro Editorial 0-100)]
-    E --> F[5. ContentScorer<br/>(Ranking Agregado)]
-    F --> G[6. SummarizerAgent<br/>(Resumo & Insights)]
-    G --> H[🎨 BannerGenerator<br/>(Capa 1200x630 Neon)]
-    H --> I[7. WriterAgent<br/>(Copywriting & Markdown)]
-    I --> J[8. CriticAgent<br/>(Revisão & Polimento)]
-    J --> K[9. PublisherManager]
-    K --> L[📄 Git / Pull Request<br/>(Showcase no Repositório)]
-    K --> M[🌐 LinkedIn API<br/>(Postagem Nativa com Mídia)]
+    A["📡 RSS / Atom Feeds"] --> B["1. CollectorAgent"]
+    B --> C["2. ContentDeduplicator<br/>(Cosine Similarity)"]
+    C --> D["3. ClassifierAgent<br/>(Taxonomia & Tags)"]
+    D --> E["4. PrioritizerAgent<br/>(Filtro Editorial 0-100)"]
+    E --> F["5. ContentScorer<br/>(Ranking Agregado)"]
+    F --> G["6. SummarizerAgent<br/>(Resumo & Insights)"]
+    G --> H["🎨 BannerGenerator<br/>(Capa 1200x630 Neon)"]
+    H --> I["7. WriterAgent<br/>(Copywriting & Markdown)"]
+    I --> J["8. CriticAgent<br/>(Revisão & Polimento)"]
+    J --> K["9. PublisherManager"]
+    K --> L["📄 Git / Pull Request<br/>(Showcase no Repositório)"]
+    K --> M["🌐 LinkedIn API<br/>(Postagem Nativa com Mídia)"]
 ```
 
 ---
