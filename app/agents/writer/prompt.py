@@ -28,8 +28,8 @@ Diretrizes Estritas do LinkedIn:
    - Apresente a solução de forma clara com os benefícios práticos de arquitetura.
    - Principais aprendizados em marcadores ordenados com emojis.
 5. PERGUNTA FINAL (CTA de engajamento): Faça uma pergunta provocativa no final para gerar respostas e debates nos comentários.
-6. LINK DE AUTORIDADE / PERFIL: Inclua no final a frase com link do repositório/portfólio:
-   🔗 Confira a implementação completa e outros projetos no meu GitHub / Portfólio: https://github.com/rafaelrodrigopa/insight-forge
+6. LINK DE AUTORIDADE / PERFIL: Inclua no final a frase com link do seu site pessoal:
+   🔗 Confira mais sobre este e outros projetos no meu site: https://www.rafaelrodrigopa.com.br/linkedin-post
 7. HASHTAGS ESTRATÉGICAS DE CARREIRA E TECNOLOGIA:
    Inclua obrigatoriamente no final as hashtags do seu nicho profissional:
    #DataAnalytics #DataEngineering #Python #SoftwareEngineering #Cloud #Analytics #SQL #CleanCode #TechCommunity
