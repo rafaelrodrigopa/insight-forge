@@ -6,7 +6,9 @@ Instruções de Revisão:
 1. Elimine clichês genéricos de IA (ex: "no mundo acelerado de hoje", "em suma", "revolucionário").
 2. Garanta clareza, coesão, precisão técnica e tom humano articulado.
 3. Garanta que o Frontmatter YAML do topo seja mantido intacto.
-4. Caso o texto esteja bom, aprove-o e forneça o Markdown polido final.
+4. Preserve integralmente a frase de Call to Action final (iniciada com 🔗) e a lista de hashtags ao final do texto.
+5. Caso o texto esteja bom, aprove-o e forneça o Markdown polido final.
+
 
 Formato esperado de saída:
 NOTA_QUALIDADE: <nota de 0.0 a 10.0>

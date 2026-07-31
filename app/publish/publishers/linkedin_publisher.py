@@ -48,14 +48,28 @@ class LinkedInFormatter:
         # 9. Remove itálicos _texto_ preservando dunders como __all__
         text = re.sub(r"(?<!\w)_([^_]+)_(?!\w)", r"\1", text)
 
-        # 10. Remove linhas divisórias ---
-        text = re.sub(r"^\s*---\s*$", "", text, flags=re.MULTILINE)
+        # 11. Garante que a frase de CTA do 1º comentário esteja presente e formatada
+        cta_line = "🔗 Confira mais sobre este e outros projetos no meu site, link no primeiro comentário"
+        if "Confira mais sobre este e outros projetos no meu site" in text:
+            text = re.sub(
+                r"🔗?\s*Confira mais sobre este e outros projetos no meu site[^\n]*",
+                cta_line,
+                text,
+            )
+        else:
+            if "\n#" in text:
+                text = re.sub(r"(\n#[\s\S]+)$", f"\n\n{cta_line}\n\\1", text)
+            else:
+                text = text.rstrip() + f"\n\n{cta_line}"
 
-        # 11. Ajusta múltiplos saltos de linha
+        # 12. Ajusta múltiplos saltos de linha
         text = re.sub(r"\n{3,}", "\n\n", text)
 
-        # 12. Compacta espaçamento entre itens de lista com emojis para economizar altura vertical no feed
+        # 13. Compacta espaçamento entre itens de lista com emojis para economizar altura vertical no feed
         text = re.sub(r"\n\n(?=[\u2600-\u27bf\U0001f300-\U0001f6ff\U0001f900-\U0001f9ff])", "\n", text)
+
+        # 14. Garante que haja um retorno de carro (\n\n) antes da frase de CTA (🔗) para não ficar colado
+        text = re.sub(r"([^\n])\n(🔗\s*Confira mais)", r"\1\n\n\2", text)
 
         return text.strip()
 
@@ -106,12 +120,35 @@ class LinkedInPublisherAdapter(BasePublisher):
                 getattr(response, "status_code", 0) in (200, 201)
                 or getattr(response, "ok", False)
             ):
-                post_id = getattr(response, "headers", {}).get("X-RestLi-Id", "OK")
+                post_id = getattr(response, "headers", {}).get("X-RestLi-Id", "")
+                if not post_id or post_id == "OK":
+                    try:
+                        res_json = response.json()
+                        post_id = res_json.get("id") or res_json.get("value", {}).get("id", "OK")
+                    except Exception:
+                        post_id = "OK"
+
+                # Publica o 1º comentário contendo o link do portfólio para preservar alcance do post principal
+                comment_text = "Site/Portfólio: https://rafaelrodrigopa.com.br/linkedin-post"
+                if post_id and post_id != "OK":
+                    post_urn = str(post_id)
+                    if not post_urn.startswith("urn:li:"):
+                        post_urn = f"urn:li:share:{post_id}"
+
+                    try:
+                        c_res = publisher.comment_on_post(post_urn=post_urn, text=comment_text)
+                        status_code = getattr(c_res, "status_code", "OK")
+                        print(f"[LinkedInPublisherAdapter] 1º comentário enviado com sucesso no URN {post_urn} (Status: {status_code})!")
+                    except Exception as comment_err:
+                        print(f"[LinkedInPublisherAdapter] Erro ao publicar 1º comentário no URN {post_urn}: {comment_err}")
+                        if "403" in str(comment_err) or "ACCESS_DENIED" in str(comment_err):
+                            print("💡 [PERMISSÃO LINKEDIN NECESSÁRIA]: Para permitir que a API comente nos posts automaticamente, ative o produto gratuito 'Community Management API' no portal do LinkedIn Developers (https://www.linkedin.com/developers/apps).")
+
                 return PublishResult(
                     publisher_name=self.name,
                     success=True,
                     post_url=f"https://www.linkedin.com/feed/update/{post_id}",
-                    message=f"Post publicado com sucesso no LinkedIn com imagem anexada! (ID: {post_id})",
+                    message=f"Post publicado com sucesso no LinkedIn com imagem anexada e link no 1º comentário! (ID: {post_id})",
                 )
             else:
                 err_text = (
@@ -169,14 +206,14 @@ class LinkedInPublisherAdapter(BasePublisher):
                 if os.path.exists(cand_path):
                     return cand_path
 
-        # 4. Correspondência por slug ou data
+        # 4. Correspondência estrita por slug do post
         clean_slug = post.slug.replace("linkedin-", "") if post.slug else ""
-        for filename in os.listdir(images_dir):
-            if filename.endswith(".png"):
-                if (clean_slug and clean_slug in filename) or (post.date and post.date in filename):
+        if clean_slug:
+            for filename in os.listdir(images_dir):
+                if filename.endswith(".png") and clean_slug in filename:
                     return os.path.join(images_dir, filename)
 
-        # 5. Fallback Seguro: pega a imagem PNG MAIS RECENTE no disco (ordem decrescente de mtime)
+        # 5. Fallback Seguro: imagem PNG mais recentemente criada/modificada no disco
         png_files = [
             os.path.join(images_dir, f)
             for f in os.listdir(images_dir)

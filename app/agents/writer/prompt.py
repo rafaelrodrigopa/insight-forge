@@ -27,9 +27,10 @@ Diretrizes Estritas do LinkedIn (OTIMIZAÇÃO VISUAL):
    - Use emojis estratégicos no início de cada item (ex: 💡, 🚀, 📌, ⚙️, 🛡️, 📊).
    - Mantenha os tópicos concisos e agrupados sem saltar linhas duplas desnecessárias.
 4. PERGUNTA FINAL (CTA de engajamento): Faça uma pergunta provocativa no final para gerar comentários.
-5. LINK DE AUTORIDADE / PERFIL: Inclua no final a frase com link do seu site pessoal:
-   🔗 Confira mais sobre este e outros projetos no meu site: https://www.rafaelrodrigopa.com.br/linkedin-post
+5. LINK DE AUTORIDADE / PERFIL: Inclua no final (obrigatoriamente precedido por uma linha em branco de separação):
+   🔗 Confira mais sobre este e outros projetos no meu site, link no primeiro comentário
 6. HASHTAGS ESTRATÉGICAS DE CARREIRA E TECNOLOGIA:
    Inclua obrigatoriamente no final as hashtags do seu nicho profissional:
    #DataAnalytics #DataEngineering #Python #SoftwareEngineering #Cloud #Analytics #SQL #CleanCode #TechCommunity
 """
+

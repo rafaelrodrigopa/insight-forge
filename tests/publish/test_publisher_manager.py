@@ -119,5 +119,45 @@ class TestPublisherEcosystem(unittest.TestCase):
             self.assertIn("yaml-banner.png", resolved)
 
 
+    def test_linkedin_formatter_spacing_and_comment_link(self):
+        from app.publish.publishers.linkedin_publisher import LinkedInFormatter
+
+        input_md = (
+            "Parágrafo sobre Microsoft Fabric.\n\n"
+            "🔗 Confira mais sobre este e outros projetos no meu site: https://lnkd.in/dBDvddnA"
+        )
+        formatted = LinkedInFormatter.format_for_linkedin(input_md)
+
+        self.assertIn("link no primeiro comentário", formatted)
+        self.assertNotIn("https://lnkd.in/dBDvddnA", formatted)
+        self.assertIn(
+            "Parágrafo sobre Microsoft Fabric.\n\n🔗 Confira mais sobre este e outros projetos no meu site, link no primeiro comentário",
+            formatted,
+        )
+
+    @patch("app.providers.linkedin.LinkedInPublisher")
+    @patch("app.publish.publishers.linkedin_publisher.settings")
+    def test_linkedin_publisher_adapter_posts_first_comment(self, mock_settings, mock_publisher_cls):
+        mock_settings.LINKEDIN_ACCESS_TOKEN = "fake-token"
+        mock_instance = MagicMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.headers = {"X-RestLi-Id": "urn:li:share:123456"}
+        mock_instance.publish_text.return_value = mock_response
+        mock_instance.publish_image.return_value = mock_response
+        mock_publisher_cls.return_value = mock_instance
+
+        with patch.dict(os.environ, {"LINKEDIN_ACCESS_TOKEN": "fake-token"}):
+            publisher = LinkedInPublisherAdapter()
+            res = publisher.publish(self.sample_post)
+
+            self.assertTrue(res.success)
+            mock_instance.comment_on_post.assert_called_once_with(
+                post_urn="urn:li:share:123456",
+                text="Site/Portfólio: https://rafaelrodrigopa.com.br/linkedin-post",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
+
