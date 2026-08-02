@@ -18,17 +18,17 @@ class BannerGenerator:
         topics: Optional[List[str]] = None,
         slug: Optional[str] = None,
         date_str: Optional[str] = None,
-        aspect_ratio: str = "1:1",
+        aspect_ratio: str = "1.91:1",
     ) -> str:
         """
-        Gera uma imagem de capa elegante e dinamicamente tematizada (1200x1200 px para 1:1 quadrado sem barras pretas no LinkedIn, ou 1200x630 para 16:9).
+        Gera uma imagem de capa elegante e dinamicamente tematizada (1200x628 px na proporção oficial 1.91:1 do LinkedIn Feed para preenchimento 100% sem barras horizontais ou verticais).
         """
         os.makedirs(self.output_dir, exist_ok=True)
 
-        if aspect_ratio == "16:9":
-            width, height = 1200, 630
-        else:
+        if aspect_ratio == "1:1":
             width, height = 1200, 1200
+        else:
+            width, height = 1200, 628
 
         # Seleciona paleta de cores dinâmica baseada no primeiro tópico relevante ou hash do título
         palette = self._select_palette(topics, title)
@@ -48,53 +48,53 @@ class BannerGenerator:
         image = Image.new("RGB", (width, height), color=bg_start)
         draw = ImageDraw.Draw(image)
 
-        # 1. Desenha gradiente sutil de fundo
+        # 1. Desenha gradiente sutil de fundo borda a borda
         for y in range(height):
             r = int(bg_start[0] + (bg_end[0] - bg_start[0]) * (y / height))
             g = int(bg_start[1] + (bg_end[1] - bg_start[1]) * (y / height))
             b = int(bg_start[2] + (bg_end[2] - bg_start[2]) * (y / height))
             draw.line([(0, y), (width, y)], fill=(r, g, b))
 
-        # 2. Desenha elementos decorativos neon (linhas, cantos e formas geométricas)
-        draw.line([(0, 0), (width, 0)], fill=accent_color, width=10 if is_square else 8)
-        draw.rectangle([50, 50, width - 50, height - 50], outline=pill_outline, width=2)
+        # 2. Desenha elementos decorativos neon (linhas de borda e círculo neon)
+        draw.line([(0, 0), (width, 0)], fill=accent_color, width=6)  # Borda superior neon
+        draw.rectangle([20, 20, width - 20, height - 20], outline=pill_outline, width=1)
 
         # Círculo sutil brilhante no canto superior direito para profundidade visual
-        draw.ellipse([width - 320, -80, width + 80, 320], outline=accent_color, width=1)
+        draw.ellipse([width - 280, -60, width + 60, 280], outline=accent_color, width=1)
 
         # 3. Badge "INSIGHT FORGE | TECH INSIGHTS"
-        badge_y = 100 if is_square else 70
-        draw.rectangle([80, badge_y, 450, badge_y + 46], fill=pill_fill, outline=accent_color, width=1)
-        draw.text((95, badge_y + 11), "INSIGHT FORGE  |  TECH INSIGHTS", fill=accent_color, font=badge_font)
+        badge_y = 70 if not is_square else 100
+        draw.rectangle([50, badge_y, 420, badge_y + 42], fill=pill_fill, outline=accent_color, width=1)
+        draw.text((65, badge_y + 10), "INSIGHT FORGE  |  TECH INSIGHTS", fill=accent_color, font=badge_font)
 
         # 4. Renderiza o Título com quebra automática de linhas
-        lines = self._wrap_text(title, max_chars_per_line=24 if is_square else 28)
-        y_text = 240 if is_square else 160
-        line_height = 70 if is_square else 60
-        for line in lines[:5]:  # até 5 linhas no formato quadrado
-            draw.text((80, y_text), line, fill=(255, 255, 255), font=title_font)
+        lines = self._wrap_text(title, max_chars_per_line=30 if not is_square else 24)
+        y_text = 145 if not is_square else 240
+        line_height = 56 if not is_square else 70
+        for line in lines[:4]:  # até 4 linhas no formato 1.91:1
+            draw.text((50, y_text), line, fill=(255, 255, 255), font=title_font)
             y_text += line_height
 
         # Linha acento decorativo abaixo do título
-        y_text += 20
-        draw.line([(80, y_text), (280, y_text)], fill=accent_color, width=3)
+        y_text += 10
+        draw.line([(50, y_text), (220, y_text)], fill=accent_color, width=3)
 
         # 5. Renderiza pills de tópicos na parte inferior
         if topics:
-            x_pill = 80
-            y_pill = 900 if is_square else 470
-            pill_h = 44 if is_square else 40
+            x_pill = 50
+            y_pill = 480 if not is_square else 900
+            pill_h = 40 if not is_square else 44
             for topic in topics[:4]:
                 topic_label = f"# {topic.upper()}"
                 try:
                     bbox = pill_font.getbbox(topic_label)
-                    pill_w = (bbox[2] - bbox[0]) + 32
+                    pill_w = (bbox[2] - bbox[0]) + 30
                 except Exception:
-                    pill_w = len(topic_label) * 13 + 32
+                    pill_w = len(topic_label) * 12 + 30
 
-                if x_pill + pill_w > width - 80:
-                    x_pill = 80
-                    y_pill += pill_h + 15
+                if x_pill + pill_w > width - 50:
+                    x_pill = 50
+                    y_pill += pill_h + 12
 
                 draw.rectangle(
                     [x_pill, y_pill, x_pill + pill_w, y_pill + pill_h],
@@ -102,12 +102,12 @@ class BannerGenerator:
                     outline=accent_color,
                     width=1,
                 )
-                draw.text((x_pill + 16, y_pill + (10 if is_square else 9)), topic_label, fill=(240, 245, 255), font=pill_font)
-                x_pill += pill_w + 16
+                draw.text((x_pill + 15, y_pill + 9), topic_label, fill=(240, 245, 255), font=pill_font)
+                x_pill += pill_w + 14
 
         # 6. Rodapé do autor / projeto
-        footer_y = 1090 if is_square else 545
-        draw.text((80, footer_y), "Gerações Inteligentes de Conteúdo Técnico | rafaelrodrigopa.com.br", fill=(140, 160, 190), font=footer_font)
+        footer_y = 560 if not is_square else 1090
+        draw.text((50, footer_y), "Gerações Inteligentes de Conteúdo Técnico | rafaelrodrigopa.com.br", fill=(140, 160, 190), font=footer_font)
 
         # Salva o arquivo
         filename_slug = slug or self._slugify(title)
