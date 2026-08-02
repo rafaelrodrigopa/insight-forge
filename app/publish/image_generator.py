@@ -18,14 +18,18 @@ class BannerGenerator:
         topics: Optional[List[str]] = None,
         slug: Optional[str] = None,
         date_str: Optional[str] = None,
+        aspect_ratio: str = "1:1",
     ) -> str:
         """
-        Gera uma imagem de capa elegante e dinamicamente tematizada de 1200x630 px.
+        Gera uma imagem de capa elegante e dinamicamente tematizada (1200x1200 px para 1:1 quadrado sem barras pretas no LinkedIn, ou 1200x630 para 16:9).
         """
         os.makedirs(self.output_dir, exist_ok=True)
 
-        width, height = 1200, 630
-        
+        if aspect_ratio == "16:9":
+            width, height = 1200, 630
+        else:
+            width, height = 1200, 1200
+
         # Seleciona paleta de cores dinâmica baseada no primeiro tópico relevante ou hash do título
         palette = self._select_palette(topics, title)
         bg_start, bg_end = palette["bg_start"], palette["bg_end"]
@@ -34,10 +38,12 @@ class BannerGenerator:
         pill_outline = palette["pill_outline"]
 
         # 0. Carrega fontes escaláveis com fallback
-        title_font = self._get_font(38, bold=True)
-        badge_font = self._get_font(16, bold=True)
-        pill_font = self._get_font(18, bold=True)
-        footer_font = self._get_font(16)
+        is_square = (height == 1200)
+        title_size = 46 if is_square else 38
+        title_font = self._get_font(title_size, bold=True)
+        badge_font = self._get_font(18 if is_square else 16, bold=True)
+        pill_font = self._get_font(20 if is_square else 18, bold=True)
+        footer_font = self._get_font(18 if is_square else 16)
 
         image = Image.new("RGB", (width, height), color=bg_start)
         draw = ImageDraw.Draw(image)
@@ -50,46 +56,58 @@ class BannerGenerator:
             draw.line([(0, y), (width, y)], fill=(r, g, b))
 
         # 2. Desenha elementos decorativos neon (linhas, cantos e formas geométricas)
-        draw.line([(0, 0), (width, 0)], fill=accent_color, width=8)  # Borda superior neon
-        draw.rectangle([40, 40, width - 40, height - 40], outline=pill_outline, width=2)
-        
+        draw.line([(0, 0), (width, 0)], fill=accent_color, width=10 if is_square else 8)
+        draw.rectangle([50, 50, width - 50, height - 50], outline=pill_outline, width=2)
+
         # Círculo sutil brilhante no canto superior direito para profundidade visual
-        draw.ellipse([width - 250, -50, width + 50, 250], outline=accent_color, width=1)
+        draw.ellipse([width - 320, -80, width + 80, 320], outline=accent_color, width=1)
 
         # 3. Badge "INSIGHT FORGE | TECH INSIGHTS"
-        draw.rectangle([70, 70, 410, 112], fill=pill_fill, outline=accent_color, width=1)
-        draw.text((85, 81), "INSIGHT FORGE  |  TECH INSIGHTS", fill=accent_color, font=badge_font)
+        badge_y = 100 if is_square else 70
+        draw.rectangle([80, badge_y, 450, badge_y + 46], fill=pill_fill, outline=accent_color, width=1)
+        draw.text((95, badge_y + 11), "INSIGHT FORGE  |  TECH INSIGHTS", fill=accent_color, font=badge_font)
 
         # 4. Renderiza o Título com quebra automática de linhas
-        lines = self._wrap_text(title, max_chars_per_line=28)
-        y_text = 160
-        for line in lines[:4]:  # no máximo 4 linhas
-            draw.text((70, y_text), line, fill=(255, 255, 255), font=title_font)
-            y_text += 60
+        lines = self._wrap_text(title, max_chars_per_line=24 if is_square else 28)
+        y_text = 240 if is_square else 160
+        line_height = 70 if is_square else 60
+        for line in lines[:5]:  # até 5 linhas no formato quadrado
+            draw.text((80, y_text), line, fill=(255, 255, 255), font=title_font)
+            y_text += line_height
+
+        # Linha acento decorativo abaixo do título
+        y_text += 20
+        draw.line([(80, y_text), (280, y_text)], fill=accent_color, width=3)
 
         # 5. Renderiza pills de tópicos na parte inferior
         if topics:
-            x_pill = 70
-            y_pill = 470
+            x_pill = 80
+            y_pill = 900 if is_square else 470
+            pill_h = 44 if is_square else 40
             for topic in topics[:4]:
                 topic_label = f"# {topic.upper()}"
                 try:
                     bbox = pill_font.getbbox(topic_label)
-                    pill_w = (bbox[2] - bbox[0]) + 30
+                    pill_w = (bbox[2] - bbox[0]) + 32
                 except Exception:
-                    pill_w = len(topic_label) * 12 + 30
+                    pill_w = len(topic_label) * 13 + 32
+
+                if x_pill + pill_w > width - 80:
+                    x_pill = 80
+                    y_pill += pill_h + 15
 
                 draw.rectangle(
-                    [x_pill, y_pill, x_pill + pill_w, y_pill + 40],
+                    [x_pill, y_pill, x_pill + pill_w, y_pill + pill_h],
                     fill=pill_fill,
                     outline=accent_color,
                     width=1,
                 )
-                draw.text((x_pill + 15, y_pill + 9), topic_label, fill=(240, 245, 255), font=pill_font)
-                x_pill += pill_w + 15
+                draw.text((x_pill + 16, y_pill + (10 if is_square else 9)), topic_label, fill=(240, 245, 255), font=pill_font)
+                x_pill += pill_w + 16
 
         # 6. Rodapé do autor / projeto
-        draw.text((70, 545), "Gerações Inteligentes de Conteúdo Técnico", fill=(140, 160, 190), font=footer_font)
+        footer_y = 1090 if is_square else 545
+        draw.text((80, footer_y), "Gerações Inteligentes de Conteúdo Técnico | rafaelrodrigopa.com.br", fill=(140, 160, 190), font=footer_font)
 
         # Salva o arquivo
         filename_slug = slug or self._slugify(title)
