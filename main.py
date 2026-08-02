@@ -134,9 +134,9 @@ def run_pipeline(
         # Gerador de Imagem / Banner Visual Dinâmico para a Notícia
         print("   -> [BannerGenerator] Gerando imagem de capa personalizada...")
         today_str = datetime.now().strftime("%Y-%m-%d")
-        item_slug = writer.service._slugify(item.title)
+        item_slug = writer.service._slugify(summary_result.title)
         image_path = banner_generator.generate_banner(
-            title=item.title,
+            title=summary_result.title,
             topics=summary_result.topics,
             slug=item_slug,
             date_str=today_str,

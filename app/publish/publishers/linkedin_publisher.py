@@ -206,11 +206,17 @@ class LinkedInPublisherAdapter(BasePublisher):
                 if os.path.exists(cand_path):
                     return cand_path
 
-        # 4. Correspondência estrita por slug do post
+        # 4. Correspondência por slug ou data do post
         clean_slug = post.slug.replace("linkedin-", "") if post.slug else ""
         if clean_slug:
             for filename in os.listdir(images_dir):
                 if filename.endswith(".png") and clean_slug in filename:
+                    return os.path.join(images_dir, filename)
+
+        if getattr(post, "date", None):
+            date_prefix = str(post.date)
+            for filename in os.listdir(images_dir):
+                if filename.endswith(".png") and filename.startswith(date_prefix):
                     return os.path.join(images_dir, filename)
 
         # 5. Fallback Seguro: imagem PNG mais recentemente criada/modificada no disco

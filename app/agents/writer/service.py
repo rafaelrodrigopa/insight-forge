@@ -169,6 +169,9 @@ class WriterService:
         image_path: Optional[str] = None,
     ) -> str:
         if raw_markdown.startswith("---"):
+            if image_path and "image:" not in raw_markdown:
+                image_line = f"image: \"images/{os.path.basename(image_path)}\"\n"
+                raw_markdown = re.sub(r"^---\n", f"---\n{image_line}", raw_markdown)
             return raw_markdown
 
         topics_str = ", ".join(topics) if topics else "Geral"
