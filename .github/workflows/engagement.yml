@@ -2,7 +2,7 @@ name: Automated LinkedIn Engagement Pipeline
 
 on:
   schedule:
-    - cron: '0 */3 * * *' # Executa a cada 3 horas
+    - cron: '17 */3 * * *' # Executa a cada 3 horas no minuto 17 para evitar fila do GitHub
   workflow_dispatch:
 
 jobs:

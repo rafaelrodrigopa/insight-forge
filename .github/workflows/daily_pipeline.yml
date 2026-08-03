@@ -2,8 +2,8 @@ name: Insight Forge -- Daily Content Pipeline
 
 on:
   schedule:
-    # Executa diariamente às 11:00 UTC (08:00 Horário de Brasília)
-    - cron: '0 11 * * *'
+    # Executa diariamente às 11:08 UTC (08:08 Horário de Brasília) - minuto ímpar para evitar fila do GitHub
+    - cron: '8 11 * * *'
   workflow_dispatch:
 
 jobs:
