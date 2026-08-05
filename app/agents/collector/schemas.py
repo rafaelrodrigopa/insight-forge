@@ -10,3 +10,4 @@ class CollectedContent:
     url: str
     published_at: Optional[str] = None
     ai_analysis: Optional[str] = None
+    priority_boost: float = 1.0

@@ -32,10 +32,12 @@ class ContentScorer:
     ) -> RankedContent:
         """
         Calcula a pontuação consolidada (0 a 100) de um item coletado ou resumido.
+        Aplica o multiplicador priority_boost do feed de origem, se disponível.
         """
         title = getattr(item, "title", str(item))
         content_text = getattr(item, "content", "")
         pub_date = getattr(item, "published_at", None)
+        priority_boost = getattr(item, "priority_boost", 1.0)
 
         full_text = f"{title} {content_text}".lower()
 
@@ -48,18 +50,20 @@ class ContentScorer:
         # 3. Pontuação de Recência (Máx: 30 pts)
         recency_score = self._calculate_recency_score(pub_date)
 
-        total_score = min(
-            100.0, round(topic_score + ai_score + recency_score, 1)
-        )
+        raw_score = topic_score + ai_score + recency_score
+
+        # 4. Aplica multiplicador de prioridade do feed de origem
+        boosted_score = min(100.0, round(raw_score * priority_boost, 1))
 
         return RankedContent(
             item=item,
-            score=total_score,
+            score=boosted_score,
             matched_topics=matched_topics,
             breakdown={
                 "topic_score": topic_score,
                 "ai_score": ai_score,
                 "recency_score": recency_score,
+                "priority_boost": priority_boost,
             },
         )
 

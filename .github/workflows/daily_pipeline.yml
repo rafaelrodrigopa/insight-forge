@@ -39,12 +39,16 @@ jobs:
         run: |
           python main.py --linkedin --publish
 
+      - name: Gerar identificador único para a branch
+        id: branch-id
+        run: echo "date=$(date +'%Y-%m-%d-%H%M')" >> "$GITHUB_OUTPUT"
+
       - name: Criar Pull Request Automático com os Rascunhos
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "feat(content): add daily post draft and visual banner asset"
-          title: "🤖 [Insight Forge] Novo Post Gerado para Revisão"
+          title: "🤖 [Insight Forge] Novo Post Gerado — ${{ steps.branch-id.outputs.date }}"
           body: |
             ## 🚀 Novo Artigo Gerado pelo Pipeline Multiagente
 
@@ -58,6 +62,6 @@ jobs:
             ### 🔍 Próximos Passos:
             1. Revise a redação e os metadados do arquivo em `posts/`.
             2. Faça o **Merge** deste Pull Request para aprovar o conteúdo.
-          branch: "automated-content-pipeline"
+          branch: "content/${{ steps.branch-id.outputs.date }}"
           base: "main"
           delete-branch: true

@@ -59,17 +59,31 @@ def run_pipeline(
     removed_dups = len(collected_items) - len(unique_items)
     print(f"   -> {removed_dups} notícias duplicadas removidas ({len(unique_items)} únicas restantes).")
 
-    # 3. Filtrar itens já gravados em posts/
+    # 3. Filtrar itens já gravados em posts/ (deduplicação por source_url)
     writer = WriterAgent()
-    existing_files = os.listdir("posts") if os.path.exists("posts") else []
-    existing_contents = []
+    existing_source_urls = set()
+    existing_slugs = set()
     if os.path.exists("posts"):
-        for fname in existing_files:
+        for fname in os.listdir("posts"):
             if fname.endswith(".md"):
                 fpath = os.path.join("posts", fname)
                 try:
                     with open(fpath, "r", encoding="utf-8") as f:
-                        existing_contents.append(f.read())
+                        content = f.read()
+                    # Extrai source_url do frontmatter YAML
+                    import re as _re
+                    url_match = _re.search(
+                        r'^source_url:\s*["\']?([^"\'\s\n]+)["\']?',
+                        content,
+                        _re.MULTILINE,
+                    )
+                    if url_match and url_match.group(1):
+                        existing_source_urls.add(url_match.group(1).strip())
+                    # Extrai slug do nome do arquivo como fallback
+                    slug_part = fname.rsplit(".", 1)[0]  # remove .md
+                    # Remove prefixo de data (YYYY-MM-DD-)
+                    slug_part = _re.sub(r"^\d{4}-\d{2}-\d{2}-", "", slug_part)
+                    existing_slugs.add(slug_part)
                 except Exception:
                     pass
 
@@ -78,13 +92,15 @@ def run_pipeline(
         unprocessed_items = unique_items
     else:
         for item in unique_items:
+            item_url = getattr(item, "url", "") or ""
+            # Verificação primária: comparar URL de origem com as URLs já publicadas
+            if item_url and item_url in existing_source_urls:
+                continue
+            # Verificação secundária (fallback): comparar slug do título
             slug = writer.service._slugify(item.title)
-            already_exists = any(slug in filename for filename in existing_files)
-            item_link = getattr(item, "link", None) or getattr(item, "source_url", None)
-            if not already_exists and item_link:
-                already_exists = any(item_link in content for content in existing_contents)
-            if not already_exists:
-                unprocessed_items.append(item)
+            if slug and any(slug in existing_slug for existing_slug in existing_slugs):
+                continue
+            unprocessed_items.append(item)
 
     print(f"   -> {len(unprocessed_items)} notícias a processar.")
 
