@@ -3,8 +3,7 @@ from typing import List, Optional
 from app.agents.writer.schemas import PostContent
 from app.publish.base import BasePublisher, PublishResult
 from app.publish.publishers.linkedin_publisher import LinkedInPublisherAdapter
-from app.publish.publishers.markdown_publisher import MarkdownPublisher
-from app.publish.publishers.postgres_publisher import PostgresPublisherAdapter
+from app.publish.publishers.postgres_publisher import SQLitePublisherAdapter
 
 
 class PublisherManager:
@@ -33,15 +32,14 @@ class PublisherManager:
 
     @classmethod
     def create_default(
-        cls, enable_linkedin: bool = False, enable_db: bool = False
+        cls, enable_linkedin: bool = False, enable_db: bool = True
     ) -> "PublisherManager":
         """
         Factory method que instancia o gerenciador com os publicadores padrão configurados.
         """
         manager = cls()
-        manager.register_publisher(MarkdownPublisher())
         if enable_db:
-            manager.register_publisher(PostgresPublisherAdapter())
+            manager.register_publisher(SQLitePublisherAdapter())
         if enable_linkedin:
             manager.register_publisher(LinkedInPublisherAdapter())
         return manager

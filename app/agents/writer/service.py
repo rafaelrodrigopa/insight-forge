@@ -141,11 +141,9 @@ class WriterService:
 
     def _save_to_disk(self, file_path: str, content: str) -> None:
         """
-        Salva o conteúdo Markdown no caminho de arquivo especificado.
+        Desativado: Os posts são armazenados diretamente no banco de dados SQLite.
         """
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        pass
 
     @staticmethod
     def _slugify(text: str) -> str:

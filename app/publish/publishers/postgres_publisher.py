@@ -4,18 +4,18 @@ from app.publish.base import BasePublisher, PublishResult
 from app.publish.publishers.linkedin_publisher import LinkedInFormatter
 
 
-class PostgresPublisherAdapter(BasePublisher):
+class SQLitePublisherAdapter(BasePublisher):
     """
-    Adaptador de publicação que grava artigos no banco de dados (PostgreSQL/SQLite).
+    Adaptador de publicação que grava artigos no banco de dados SQLite local.
     """
 
     def __init__(self):
-        super().__init__(name="PostgreSQL Database")
+        super().__init__(name="SQLite Database")
         self.repository = PostRepository()
 
     def publish(self, post: PostContent) -> PublishResult:
         """
-        Salva o post gerado na tabela 'posts' do banco de dados.
+        Salva o post gerado na tabela 'posts' do banco de dados SQLite.
         """
         try:
             formatted_text = LinkedInFormatter.format_for_linkedin(post.content_md)
@@ -25,12 +25,11 @@ class PostgresPublisherAdapter(BasePublisher):
                 formatted_linkedin_text=formatted_text,
             )
 
-            engine_name = "PostgreSQL" if res.get("engine") == "postgres" else "SQLite"
             return PublishResult(
                 publisher_name=self.name,
                 success=True,
                 post_url=None,
-                message=f"Post '{post.slug}' salvo no banco ({engine_name}) com status '{res.get('status')}'!",
+                message=f"Post '{post.slug}' salvo no banco de dados SQLite com status '{res.get('status')}'!",
             )
         except Exception as err:
             return PublishResult(
