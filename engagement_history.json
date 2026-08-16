@@ -1,0 +1,23 @@
+{
+  "urn:li:share:7e80bdb2d1313ab071169721df697aae": {
+    "interacted_at": "2026-07-30T13:58:39.783785",
+    "reaction": "LIKE",
+    "comment": "Análise fantástica sobre o impacto físico da IA. À medida que escalamos arquiteturas no Fabric e BigQuery com modelos pesados, a eficiência de custos e de infraestrutura se tornará tão crítica quanto a otimização de consultas SQL.",
+    "title": "The next wave of AI infrastructure could consume more electricity than nearly every US state. We analyzed more than 1,400 data center projects to understand where they're being built, who owns them, and how much power they could use. Explore our search - LinkedIn",
+    "topic": "Power BI"
+  },
+  "urn:li:share:642f20679c5c522efec9c351946fed63": {
+    "interacted_at": "2026-07-30T13:58:48.409240",
+    "reaction": "LIKE",
+    "comment": "Reduzir o tempo de planejamento pela metade demonstra bem o valor de consolidar a camada analítica com Azure Synapse e Power BI. O grande desafio nesse tipo de arquitetura costuma ser a modelagem semântica eficiente para garantir que a performance no DirectQuery ou no Import acompanhe a tomada de decisão ágil da operação.",
+    "title": "Lavender Confectionery & Bakery halves weekly planning time with Azure Synapse Analytics and Power BI - Microsoft",
+    "topic": "Power BI"
+  },
+  "urn:li:share:abb60c6182b719300ee853b44482d044": {
+    "interacted_at": "2026-07-30T13:58:58.732120",
+    "reaction": "LIKE",
+    "comment": "Modernizar o ecossistema analítico em ambientes de missão crítica como o da defesa exige uma governança robusta e arquiteturas híbridas eficientes. A transição para ferramentas como o Microsoft Fabric traz uma camada semântica unificada que simplifica drasticamente o acesso aos dados em larga escala. Excelente ver a adoção dessas práticas de engenharia de dados em projetos de grande porte.",
+    "title": "Sustainment Enterprise Analytics Modernization with Microsoft BI - army.mil",
+    "topic": "Power BI"
+  }
+}

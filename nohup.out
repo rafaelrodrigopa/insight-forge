@@ -1,0 +1,59 @@
+[*] Agendador nativo iniciado às 22:31:40.
+[*] Tarefa programada para: 22:33
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/workspace/insight-forge/scheduler.py", line 27, in <module>
+    time.sleep(1)
+KeyboardInterrupt
+Direct use of automatic function calling (AFC) in Models.generate_content is not recommended. Instead, we recommend to use AFC in Chat.send_message. Similarly, direct use of AFC in Models.generate_content_stream is not recommended. Instead, we recommend to use AFC in Chat.send_message_stream.
+==================================================
+Insight Forge -- Pipeline Multiagente (LINKEDIN)
+==================================================
+Fonte configurada: Pool Multi-Feeds (Power BI, IA, Cloud, Geral & Mercado)
+
+1. [CollectorAgent] Coletando notícias do Pool de Feeds RSS...
+   -> 46 itens totais coletados no pool.
+
+2. [Preprocess] Deduplicando conteúdos...
+   -> 2 notícias duplicadas removidas (44 únicas restantes).
+   -> 28 notícias a processar.
+
+3. [ClassifierAgent] Classificando categorias e tags técnicas...
+   -> Categoria Principal: IA
+   -> Categorias Secundárias: Carreira & Liderança Técnica
+
+4. [PrioritizerAgent] Avaliando prioridade editorial...
+   -> Score Editorial: 85.0/100 | Publicar: SIM
+
+5. [RankingEngine] Ranqueando relevância das notícias...
+   -> Destaque selecionado pelo ranking:
+      Score 40.8/100: "Nova IA detecta sinais de erupções solares antes que elas aconteçam"
+
+--- [1/1] Processando: "Nova IA detecta sinais de erupções solares antes que elas aconteçam" ---
+6. [SummarizerAgent] Gerando resumo estruturado...
+   -> Tópicos: IA, Machine Learning, Astronomia, Clima Espacial, Tecnologia
+   -> [BannerGenerator] Gerando imagem de capa personalizada...
+   -> Imagem criada: posts/images/2026-08-15-nova-ia-preve-erupcoes-solares-antecipadamente.png
+7. [WriterAgent] Redigindo post para formato LINKEDIN...
+8. [CriticAgent] Revisando e polindo o post...
+   -> Nota de Qualidade Editorial: 9.5/10.0
+   -> Post revisado salvo em: posts/2026-08-15-linkedin-nova-ia-preve-erupcoes-solares-antecipadamente.md
+
+9. [PublisherManager] Disparando publicadores ativos...
+[LinkedInPublisherAdapter] Erro ao publicar 1º comentário no URN urn:li:share:7494567078369304576: 403 Client Error: Forbidden for url: https://api.linkedin.com/rest/socialActions/urn%3Ali%3Ashare%3A7494567078369304576/comments
+💡 [PERMISSÃO LINKEDIN NECESSÁRIA]: Para permitir que a API comente nos posts automaticamente, ative o produto gratuito 'Community Management API' no portal do LinkedIn Developers (https://www.linkedin.com/developers/apps).
+   ✅ [Markdown Local/Git]: Post salvo com sucesso em: posts/2026-08-15-linkedin-nova-ia-preve-erupcoes-solares-antecipadamente.md
+   ✅ [LinkedIn API]: Post publicado com sucesso no LinkedIn com imagem anexada e link no 1º comentário! (ID: urn:li:share:7494567078369304576)
+
+==================================================
+PIPELINE MULTIAGENTE CONCLUÍDO COM SUCESSO!
+==================================================
+[*] Agendador nativo iniciado às 22:31:30.
+[*] Tarefa programada para: 22:33
+
+[+] [22:33:00] Disparando pipeline...
+[+] Concluído. Aguardando próximo ciclo...
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/workspace/insight-forge/scheduler.py", line 27, in <module>
+    time.sleep(1)
+    ~~~~~~~~~~^^^
+KeyboardInterrupt
