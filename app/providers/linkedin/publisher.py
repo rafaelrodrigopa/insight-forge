@@ -173,3 +173,29 @@ class LinkedInPublisher:
             "lifecycleState": "PUBLISHED"
         }
         return self.client.post("/rest/posts", payload)
+
+    def check_post_exists(self, post_urn: str) -> bool:
+        """
+        Verifica se uma publicação ainda existe no perfil do LinkedIn.
+        Retorna False se o post tiver sido excluído manualmente (status HTTP 404).
+        """
+        import requests
+        clean_urn = post_urn.strip()
+        if not clean_urn.startswith("urn:li:"):
+            clean_urn = f"urn:li:share:{clean_urn}"
+
+        embed_url = f"https://www.linkedin.com/embed/feed/update/{clean_urn}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        }
+
+        try:
+            res = requests.get(embed_url, headers=headers, allow_redirects=True, timeout=10)
+            if res.status_code == 404:
+                return False
+            if "no longer available" in res.text.lower() or "não encontrada" in res.text.lower():
+                return False
+            return True
+        except Exception:
+            return True

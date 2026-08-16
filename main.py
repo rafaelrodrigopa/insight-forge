@@ -13,9 +13,12 @@ from app.agents.critic import CriticAgent
 from app.agents.prioritizer import PrioritizerAgent
 from app.agents.summarizer import SummarizerAgent
 from app.agents.writer import WriterAgent
+from app.db.repository import PostRepository
 from app.preprocess import ContentDeduplicator
 from app.publish import BannerGenerator, PublisherManager
 from app.ranking import ContentScorer
+
+DAYS_WINDOW = 30
 
 
 def run_pipeline(
@@ -25,12 +28,20 @@ def run_pipeline(
     enable_publish: bool = False,
     force_process: bool = False,
     save_db: bool = False,
+    ignore_history: bool = False,
 ):
     url = source_url or "https://realpython.com/atom.xml"
 
     print("==================================================")
     print(f"Insight Forge -- Pipeline Multiagente ({platform.upper()})")
     print("==================================================")
+
+    repo = PostRepository()
+
+    # Sincronização autônoma: verifica se algum post recente foi excluído no LinkedIn
+    cleaned = repo.sync_deleted_posts(days_window=DAYS_WINDOW)
+    if cleaned > 0:
+        print(f"   [LinkedIn Sync] {cleaned} post(s) excluídos manualmente no perfil foram desmarcados no SQLite.\n")
 
     # 1. Agente Coletor
     collector = CollectorAgent()
@@ -60,10 +71,29 @@ def run_pipeline(
     removed_dups = len(collected_items) - len(unique_items)
     print(f"   -> {removed_dups} notícias duplicadas removidas ({len(unique_items)} únicas restantes).")
 
-    # 3. Filtrar itens já gravados em posts/ (deduplicação por source_url)
+    # 3. Filtrar itens já gravados em posts/ e no banco de dados SQLite
     writer = WriterAgent()
     existing_source_urls = set()
     existing_slugs = set()
+
+    # Carrega URLs e slugs já salvos no banco SQLite
+    try:
+        conn, _ = repo.db.get_connection() if hasattr(repo, 'db') else (None, None)
+        from app.db.connection import DatabaseConnection
+        conn, _ = DatabaseConnection.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT source_url, slug FROM posts WHERE COALESCE(posted_at, published_at, created_at) >= datetime('now', '-30 days');")
+        for row in cursor.fetchall():
+            if row[0]:
+                existing_source_urls.add(row[0].strip())
+                existing_source_urls.add(row[0].split("?")[0].strip())
+            if row[1]:
+                existing_slugs.add(row[1].strip())
+        cursor.close()
+        conn.close()
+    except Exception:
+        pass
+
     if os.path.exists("posts"):
         for fname in os.listdir("posts"):
             if fname.endswith(".md"):
@@ -118,15 +148,37 @@ def run_pipeline(
     priority_decision = prioritizer.evaluate(unprocessed_items[0])
     print(f"   -> Score Editorial: {priority_decision.priority_score}/100 | Publicar: {'SIM' if priority_decision.should_publish else 'NÃO'}")
 
-    # 6. Ranking Engine
-    print("\n5. [RankingEngine] Ranqueando relevância das notícias...")
+    # 6. Ranking Engine & Deduplicação por Janela Temporal (30 dias)
+    if ignore_history:
+        print(f"\n5. [RankingEngine] Ranqueando relevância (Flag --ignore-history ativada: ignorando trava de {DAYS_WINDOW} dias)...")
+    else:
+        print(f"\n5. [RankingEngine] Ranqueando relevância e verificando janela temporal ({DAYS_WINDOW} dias)...")
+
     scorer = ContentScorer()
     ranked_items = scorer.rank_items(unprocessed_items)
-    print("   -> Destaque selecionado pelo ranking:")
-    target_item = ranked_items[0].item
-    print(f"      Score {ranked_items[0].score}/100: \"{target_item.title}\"")
 
-    items_to_process = [r.item for r in ranked_items] if process_all else [target_item]
+    eligible_ranked = []
+    for r in ranked_items:
+        item = r.item
+        item_url = getattr(item, "url", "") or ""
+        slug = writer.service._slugify(item.title)
+
+        if not force_process and not ignore_history and repo.is_recently_posted(source_url=item_url, slug=slug, days_window=DAYS_WINDOW):
+            print(f"   [Deduplicação Temporal] Ignorando \"{item.title}\" (já postada nos últimos {DAYS_WINDOW} dias). Avaliando próxima do ranking...")
+            continue
+
+        eligible_ranked.append(r)
+
+    if not eligible_ranked:
+        print(f"\n[Deduplicação Temporal] Todas as notícias ranqueadas já foram publicadas nos últimos {DAYS_WINDOW} dias.")
+        print("Ciclo finalizado graciosamente sem disparar publicações duplicadas.")
+        return
+
+    target_item = eligible_ranked[0].item
+    print(f"   -> Destaque selecionado pelo ranking (não postado nos últimos {DAYS_WINDOW} dias):")
+    print(f"      Score {eligible_ranked[0].score}/100: \"{target_item.title}\"")
+
+    items_to_process = [r.item for r in eligible_ranked] if process_all else [target_item]
 
     summarizer = SummarizerAgent()
     critic = CriticAgent()
@@ -191,9 +243,19 @@ def run_pipeline(
         # 10. Disparo dos Publicadores Multi-Canal
         print("\n9. [PublisherManager] Disparando publicadores ativos...")
         results = publisher_manager.publish_all(post_content)
+        linkedin_post_url = None
         for res in results:
             status_icon = "✅" if res.success else "⚠️"
             print(f"   {status_icon} [{res.publisher_name}]: {res.message}")
+            if res.post_url:
+                linkedin_post_url = res.post_url
+
+        # Registra no banco SQLite o histórico de postagem com a URL do post para controle de sincronização
+        repo.record_posted_at(
+            slug=post_content.slug,
+            source_url=getattr(post_content, "source_url", None),
+            post_url=linkedin_post_url,
+        )
 
     print("\n==================================================")
     print("PIPELINE MULTIAGENTE CONCLUÍDO COM SUCESSO!")
@@ -207,19 +269,23 @@ if __name__ == "__main__":
     publish_flag = False
     force_flag = False
     db_flag = True
+    ignore_history_flag = False
 
     for arg in sys.argv[1:]:
-        if arg == "--all":
+        clean_arg = arg.lstrip("-").lower()
+        if clean_arg == "all":
             all_flag = True
-        elif arg == "--linkedin":
+        elif clean_arg == "linkedin":
             platform_arg = "linkedin"
-        elif arg in ("--publish", "--public"):
+        elif clean_arg in ("publish", "public"):
             publish_flag = True
-        elif arg == "--force":
+        elif clean_arg == "force":
             force_flag = True
-        elif arg in ("--no-db", "--disable-db"):
+        elif clean_arg in ("no-db", "disable-db"):
             db_flag = False
-        elif not arg.startswith("--"):
+        elif clean_arg in ("ignore-history", "ignorehistory", "no-history"):
+            ignore_history_flag = True
+        elif not arg.startswith("-"):
             source_arg = arg
 
     run_pipeline(
@@ -229,4 +295,5 @@ if __name__ == "__main__":
         enable_publish=publish_flag,
         force_process=force_flag,
         save_db=db_flag,
+        ignore_history=ignore_history_flag,
     )

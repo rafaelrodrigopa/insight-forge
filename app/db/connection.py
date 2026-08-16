@@ -42,12 +42,23 @@ class DatabaseConnection:
             status TEXT DEFAULT 'draft',
             post_url TEXT,
             published_at TIMESTAMP,
+            posted_at DATETIME,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
 
         cursor.execute(create_table_sql)
+
+        # Migração automática: garante que a coluna 'posted_at' exista em bancos pré-existentes
+        cursor.execute("PRAGMA table_info(posts);")
+        columns = [column[1] for column in cursor.fetchall()]
+        if "posted_at" not in columns:
+            cursor.execute("ALTER TABLE posts ADD COLUMN posted_at DATETIME;")
+
+        # Preenche posted_at retroativamente com created_at para posts antigos que possuem posted_at NULO
+        cursor.execute("UPDATE posts SET posted_at = created_at WHERE posted_at IS NULL;")
+
         conn.commit()
         cursor.close()
         conn.close()

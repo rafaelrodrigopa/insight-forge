@@ -18,11 +18,14 @@ class SQLitePublisherAdapter(BasePublisher):
         Salva o post gerado na tabela 'posts' do banco de dados SQLite.
         """
         try:
+            from datetime import datetime
             formatted_text = LinkedInFormatter.format_for_linkedin(post.content_md)
+            now_iso = datetime.now().isoformat()
             res = self.repository.save_post(
                 post=post,
-                status="draft",
+                status="published",
                 formatted_linkedin_text=formatted_text,
+                posted_at=now_iso,
             )
 
             return PublishResult(
